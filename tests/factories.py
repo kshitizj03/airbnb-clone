@@ -1,6 +1,6 @@
 from datetime import date
 
-from app.models import Booking, Listing, ListingPhoto, User
+from app.models import Booking, Listing, ListingPhoto, Review, User
 from app.security import hash_password
 
 # bcrypt is slow on purpose, so hash the shared test password once.
@@ -43,3 +43,14 @@ def make_booking(db, listing, guest, check_in: date, check_out: date, status="co
     db.add(booking)
     db.commit()
     return booking
+
+
+def make_review(db, booking, comment="Lovely stay", **scores) -> Review:
+    fields = dict(rating=5, cleanliness=5, accuracy=5, checkin=5, communication=5, location=5,
+                  value=5)
+    fields.update(scores)
+    review = Review(booking_id=booking.id, listing_id=booking.listing_id,
+                    author_id=booking.guest_id, comment=comment, **fields)
+    db.add(review)
+    db.commit()
+    return review
