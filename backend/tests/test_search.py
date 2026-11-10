@@ -160,3 +160,14 @@ def test_meta_amenities_and_destinations(client, db):
     assert top[0] == {"city": "Goa", "state": "Goa", "country": "India", "listing_count": 2}
     found = client.get("/api/destinations", params={"q": "jai"}).json()
     assert [d["city"] for d in found] == ["Jaipur"]
+
+
+def test_detail_returns_all_photos_cards_five(client, db):
+    from app.models import ListingPhoto
+    host = make_user(db, "h@x.com")
+    listing = make_listing(db, host)
+    listing.photos = [ListingPhoto(url=f"https://img/{i}", position=i) for i in range(7)]
+    db.commit()
+    urls = [f"https://img/{i}" for i in range(7)]
+    assert client.get(f"/api/listings/{listing.id}").json()["photos"] == urls
+    assert client.get("/api/listings").json()["items"][0]["photos"] == urls[:5]
