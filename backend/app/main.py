@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from app import models  # noqa: F401  (registers tables on Base)
 from app.db import Base, SessionLocal, engine
 from app.errors import register_error_handlers
-from app.routers import auth
+from app.routers import auth, listings, meta
 from app.seed import seed
 
 
@@ -23,6 +23,8 @@ def create_app(init_db: bool = True) -> FastAPI:
 
     register_error_handlers(app)
     app.include_router(auth.router)
+    app.include_router(listings.router)
+    app.include_router(meta.router)
 
     @app.get("/api/health")
     def health():
