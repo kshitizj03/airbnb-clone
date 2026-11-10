@@ -1,0 +1,29 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from app import models  # noqa: F401  (registers tables on Base)
+from app.db import Base, SessionLocal, engine
+from app.seed import seed
+
+
+def create_app(init_db: bool = True) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI):
+        if init_db:
+            # On Render the disk is only mounted at runtime, so build and seed on startup.
+            Base.metadata.create_all(engine)
+            with SessionLocal() as db:
+                seed(db)
+        yield
+
+    app = FastAPI(title="StayHub API", lifespan=lifespan)
+
+    @app.get("/api/health")
+    def health():
+        return {"ok": True}
+
+    return app
+
+
+app = create_app()

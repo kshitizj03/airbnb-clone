@@ -1,0 +1,29 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Local data and secrets
+*.db
+*.sqlite3
+.env
+.env.*
+!.env.example
+uploads/
+
+# Local planning docs and tooling (never committed)
+docs/
+.superpowers/
+.claude/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
