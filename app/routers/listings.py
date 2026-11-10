@@ -139,8 +139,10 @@ def detail(listing_id: int, db: Session = Depends(get_db)):
         .where(Listing.host_id == listing.host_id, Listing.deleted_at.is_(None))
     ).one()
     host = listing.host
+    card = to_card(listing, averages[0], averages[7]).model_dump()
+    card["photos"] = [p.url for p in listing.photos]  # detail shows all, cards only 5
     return ListingDetail(
-        **to_card(listing, averages[0], averages[7]).model_dump(),
+        **card,
         description=listing.description, address=listing.address, country=listing.country,
         amenities=sorted(listing.amenities, key=lambda a: (a.category, a.name)),
         host=HostOut(id=host.id, name=host.name, avatar_url=host.avatar_url, bio=host.bio,
