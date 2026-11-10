@@ -242,3 +242,31 @@ class ListingPatch(BaseModel):
     instant_book: bool | None = None
     amenity_slugs: list[str] | None = None
     photo_urls: PhotoUrls | None = None
+
+
+class WishlistIn(BaseModel):
+    name: Annotated[str, Field(min_length=1, max_length=50)]
+    listing_id: int | None = None
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def trim(cls, v):
+        return v.strip() if isinstance(v, str) else v
+
+
+class SaveIn(BaseModel):
+    listing_id: int
+
+
+class WishlistOut(BaseModel):
+    id: int
+    name: str
+    count: int
+    cover_photos: list[str]  # first photo of up to 4 most recently saved listings
+    updated_at: datetime
+
+
+class WishlistDetail(BaseModel):
+    id: int
+    name: str
+    items: list[ListingCard]
