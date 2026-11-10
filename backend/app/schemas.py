@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class UserOut(BaseModel):
@@ -17,6 +17,13 @@ class SignupIn(BaseModel):
     name: str = Field(min_length=1)
     email: EmailStr
     password: str = Field(min_length=8)
+
+    @field_validator("password")
+    @classmethod
+    def password_fits_bcrypt(cls, v: str) -> str:
+        if len(v.encode()) > 72:  # bcrypt only accepts 72 bytes
+            raise ValueError("Password must be at most 72 bytes.")
+        return v
 
 
 class LoginIn(BaseModel):

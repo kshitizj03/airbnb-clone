@@ -87,3 +87,25 @@ def test_password_is_hashed(client, session_factory):
         stored = db.scalar(select(User.password_hash).where(User.email == "asha@example.com"))
     assert stored != "password123"
     assert stored.startswith("$2")
+
+
+def test_signup_password_over_72_bytes_422(client):
+    r = client.post("/api/auth/signup", json={**SIGNUP, "password": "a" * 73})
+    assert r.status_code == 422
+    assert "password" in r.json()["error"]["fields"]
+
+
+def test_login_password_over_72_bytes_401(client, db):
+    make_user(db, email="u@x.com")
+    r = client.post("/api/auth/login", json={"email": "u@x.com", "password": "a" * 100})
+    assert r.status_code == 401
+    assert r.json()["error"]["code"] == "invalid_credentials"
+
+
+def test_signup_race_duplicate_is_409(client, monkeypatch):
+    client.post("/api/auth/signup", json=SIGNUP)
+    # Simulate the race: the pre-check misses, so the unique constraint must catch it.
+    monkeypatch.setattr("app.routers.auth._by_email", lambda db, email: None)
+    r = client.post("/api/auth/signup", json=SIGNUP)
+    assert r.status_code == 409
+    assert r.json()["error"]["code"] == "email_taken"
