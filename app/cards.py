@@ -16,14 +16,14 @@ _stats = (
 )
 
 
-def rated_listings() -> Select:
-    """Select of (Listing, rating, review_count) for non-deleted listings, photos preloaded."""
-    return (
+def rated_listings(include_deleted: bool = False) -> Select:
+    """Select of (Listing, rating, review_count), photos preloaded; live listings by default."""
+    query = (
         select(Listing, _stats.c.rating, func.coalesce(_stats.c.review_count, 0))
         .outerjoin(_stats, _stats.c.listing_id == Listing.id)
-        .where(Listing.deleted_at.is_(None))
         .options(selectinload(Listing.photos))
     )
+    return query if include_deleted else query.where(Listing.deleted_at.is_(None))
 
 
 def rating_order():

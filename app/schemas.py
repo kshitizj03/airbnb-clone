@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -126,3 +126,42 @@ class DestinationOut(BaseModel):
     state: str
     country: str
     listing_count: int
+
+
+class PriceQuoteOut(BaseModel):
+    nights: int
+    nightly_price: int
+    subtotal: int
+    cleaning_fee: int
+    service_fee: int
+    taxes: int
+    total: int
+
+
+class BookingIn(BaseModel):
+    listing_id: int
+    check_in: date
+    check_out: date
+    adults: int = 1
+    children: int = Field(0, ge=0)
+    infants: int = Field(0, ge=0)
+    pets: int = Field(0, ge=0)
+
+
+class BookingOut(BaseModel):
+    id: int
+    listing: ListingCard
+    check_in: date
+    check_out: date
+    adults: int
+    children: int
+    infants: int
+    pets: int
+    nights: int
+    nightly_price: int
+    cleaning_fee: int
+    service_fee: int
+    taxes: int
+    total: int
+    status: str
+    created_at: datetime

@@ -6,13 +6,16 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.availability import booked_ranges, overlap_clause
+from app.availability import booked_ranges, has_overlap, overlap_clause
 from app.cards import rated_listings, rating_order, to_card
 from app.clock import today
 from app.db import get_db
 from app.errors import AppError
 from app.models import Amenity, Booking, Listing, Review, listing_amenities
-from app.schemas import HostOut, ListingCard, ListingDetail, Page, RatingBreakdown, ReviewOut
+from app.pricing import quote, validate_stay
+from app.schemas import (
+    HostOut, ListingCard, ListingDetail, Page, PriceQuoteOut, RatingBreakdown, ReviewOut,
+)
 
 router = APIRouter(prefix="/api/listings", tags=["listings"])
 
@@ -161,6 +164,24 @@ def availability(listing_id: int, db: Session = Depends(get_db)):
     ranges = booked_ranges(db, listing_id, start, start + timedelta(days=365))
     return {"booked": [{"check_in": a.isoformat(), "check_out": b.isoformat()}
                        for a, b in ranges]}
+
+
+@router.get("/{listing_id}/quote", response_model=PriceQuoteOut)
+def price_quote(
+    listing_id: int,
+    check_in: date,
+    check_out: date,
+    adults: int = 1,
+    children: int = 0,
+    infants: int = 0,
+    pets: int = 0,
+    db: Session = Depends(get_db),
+):
+    listing = get_live_listing(db, listing_id)
+    validate_stay(listing, check_in, check_out, adults, children, infants, pets)
+    if has_overlap(db, listing_id, check_in, check_out):
+        raise AppError(409, "dates_unavailable", "Those dates are already booked.")
+    return quote(listing.price_per_night, listing.cleaning_fee, check_in, check_out)
 
 
 @router.get("/{listing_id}/reviews", response_model=Page[ReviewOut])
