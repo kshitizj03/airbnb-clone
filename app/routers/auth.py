@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -22,7 +23,11 @@ def signup(body: SignupIn, response: Response, db: Session = Depends(get_db)):
     user = User(name=body.name.strip(), email=body.email.strip().lower(),
                 password_hash=hash_password(body.password))
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:  # a concurrent signup took the email after our check
+        db.rollback()
+        raise AppError(409, "email_taken", "An account with this email already exists.")
     issue_cookie(response, user.id)
     return user
 
