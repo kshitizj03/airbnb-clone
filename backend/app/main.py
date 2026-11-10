@@ -9,7 +9,7 @@ from app import models  # noqa: F401  (registers tables on Base)
 from app.config import get_settings
 from app.db import Base, SessionLocal, engine
 from app.errors import register_error_handlers
-from app.routers import auth, bookings, host, listings, meta, uploads
+from app.routers import auth, bookings, host, listings, meta, uploads, wishlists
 from app.seed import seed
 
 
@@ -31,6 +31,7 @@ def create_app(init_db: bool = True) -> FastAPI:
     app.include_router(bookings.router)
     app.include_router(host.router)
     app.include_router(uploads.router)
+    app.include_router(wishlists.router)
     app.include_router(meta.router)
 
     upload_dir = Path(get_settings().upload_dir)
