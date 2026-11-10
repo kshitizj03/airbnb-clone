@@ -2,20 +2,25 @@ import math
 from datetime import date, timedelta
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.availability import booked_ranges, has_overlap, overlap_clause
 from app.cards import rated_listings, rating_order, to_card
+from app import clock
 from app.clock import today
 from app.db import get_db
 from app.errors import AppError
-from app.models import Amenity, Booking, Listing, Review, listing_amenities
+from app.models import (
+    Amenity, Booking, Listing, ListingPhoto, Review, User, listing_amenities,
+)
 from app.pricing import quote, validate_stay
 from app.schemas import (
-    HostOut, ListingCard, ListingDetail, Page, PriceQuoteOut, RatingBreakdown, ReviewOut,
+    HostOut, ListingCard, ListingDetail, ListingIn, ListingPatch, Page, PriceQuoteOut,
+    RatingBreakdown, ReviewOut,
 )
+from app.security import current_user
 
 router = APIRouter(prefix="/api/listings", tags=["listings"])
 
@@ -118,9 +123,8 @@ def _avg(value) -> float | None:
     return round(value, 2) if value is not None else None
 
 
-@router.get("/{listing_id}", response_model=ListingDetail)
-def detail(listing_id: int, db: Session = Depends(get_db)):
-    listing = get_live_listing(db, listing_id)
+def _detail(db: Session, listing: Listing) -> ListingDetail:
+    listing_id = listing.id
     averages = db.execute(
         select(func.avg(Review.rating), *(func.avg(getattr(Review, s)) for s in SCORES),
                func.count())
@@ -157,6 +161,74 @@ def detail(listing_id: int, db: Session = Depends(get_db)):
     )
 
 
+@router.get("/{listing_id}", response_model=ListingDetail)
+def detail(listing_id: int, db: Session = Depends(get_db)):
+    return _detail(db, get_live_listing(db, listing_id))
+
+
+def _amenities(db: Session, slugs: list[str]) -> list[Amenity]:
+    wanted = set(slugs)
+    found = db.scalars(select(Amenity).where(Amenity.slug.in_(wanted))).all()
+    if missing := wanted - {a.slug for a in found}:
+        raise AppError(422, "unknown_amenity", "Some amenities do not exist.",
+                       {"amenity_slugs": f"Unknown: {', '.join(sorted(missing))}"})
+    return list(found)
+
+
+def _photos(urls: list[str]) -> list[ListingPhoto]:
+    return [ListingPhoto(url=url, position=i) for i, url in enumerate(urls)]
+
+
+@router.post("", response_model=ListingDetail, status_code=201)
+def create_listing(body: ListingIn, db: Session = Depends(get_db),
+                   user: User = Depends(current_user)):
+    data = body.model_dump(exclude={"amenity_slugs", "photo_urls"})
+    listing = Listing(host_id=user.id, **data, amenities=_amenities(db, body.amenity_slugs),
+                      photos=_photos(body.photo_urls))
+    db.add(listing)
+    user.is_host = True  # creating a listing is what makes someone a host
+    db.commit()
+    return _detail(db, listing)
+
+
+def _owned_listing(db: Session, listing_id: int, user: User) -> Listing:
+    listing = get_live_listing(db, listing_id)
+    if listing.host_id != user.id:
+        raise AppError(403, "not_owner", "You can only change your own listings.")
+    return listing
+
+
+@router.patch("/{listing_id}", response_model=ListingDetail)
+def update_listing(listing_id: int, body: ListingPatch, db: Session = Depends(get_db),
+                   user: User = Depends(current_user)):
+    listing = _owned_listing(db, listing_id, user)
+    changes = body.model_dump(exclude_none=True)  # only the fields the client sent
+    slugs, urls = changes.pop("amenity_slugs", None), changes.pop("photo_urls", None)
+    for field, value in changes.items():
+        setattr(listing, field, value)
+    if slugs is not None:
+        listing.amenities = _amenities(db, slugs)
+    if urls is not None:
+        listing.photos = _photos(urls)  # replaces the set; the old rows are orphan-deleted
+    db.commit()
+    return _detail(db, listing)
+
+
+@router.delete("/{listing_id}", status_code=204)
+def delete_listing(listing_id: int, db: Session = Depends(get_db),
+                   user: User = Depends(current_user)):
+    listing = _owned_listing(db, listing_id, user)
+    upcoming = db.scalar(select(Booking.id).where(
+        Booking.listing_id == listing.id, Booking.status == "confirmed",
+        Booking.check_out > clock.today()).limit(1))
+    if upcoming is not None:
+        raise AppError(409, "has_upcoming_bookings",
+                       "Cancel or finish the upcoming bookings before deleting this listing.")
+    listing.deleted_at = func.now()  # soft delete: past trips and reviews still point here
+    db.commit()
+    return Response(status_code=204)
+
+
 @router.get("/{listing_id}/availability")
 def availability(listing_id: int, db: Session = Depends(get_db)):
     get_live_listing(db, listing_id)
@@ -171,10 +243,10 @@ def price_quote(
     listing_id: int,
     check_in: date,
     check_out: date,
-    adults: int = 1,
-    children: int = 0,
-    infants: int = 0,
-    pets: int = 0,
+    adults: int = Query(1, ge=1),
+    children: int = Query(0, ge=0),
+    infants: int = Query(0, ge=0),
+    pets: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):
     listing = get_live_listing(db, listing_id)

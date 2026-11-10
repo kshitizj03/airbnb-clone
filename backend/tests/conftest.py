@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
 from app import models  # noqa: F401  (registers tables on Base)
+from app.config import get_settings
 from app.db import Base, get_db, make_engine
 from app.main import create_app
 
@@ -22,7 +23,14 @@ def db(session_factory):
 
 
 @pytest.fixture
-def client(session_factory):
+def upload_dir(tmp_path, monkeypatch):
+    path = tmp_path / "uploads"
+    monkeypatch.setattr(get_settings(), "upload_dir", str(path))  # never write into the repo
+    return path
+
+
+@pytest.fixture
+def client(session_factory, upload_dir):
     app = create_app(init_db=False)
 
     def override_get_db():
