@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/* Design tokens from docs/airbnb-ui-spec.md section 1. */
+@theme {
+  /* Plus Jakarta Sans stands in for Airbnb Cereal, same fallbacks. */
+  --font-sans: var(--font-cereal), Circular, -apple-system, BlinkMacSystemFont, Roboto,
+    "Helvetica Neue", sans-serif;
+
+  /* Colours */
+  --color-rausch: #ff385c;
+  --color-product-rausch: #e00b41;
+  --color-rausch-light: #ffe8ec;
+  --color-hof: #222222; /* text-primary, black buttons, active borders */
+  --color-secondary: #6c6c6c; /* subtitles, meta */
+  --color-foggy: #6a6a6a; /* placeholders */
+  --color-tertiary: #8c8c8c;
+  --color-disabled: #c1c1c1; /* past or blocked dates */
+  --color-deco: #dddddd; /* inputs, chips, cards */
+  --color-bebe: #ebebeb; /* dividers, skeleton */
+  --color-faint: #f7f7f7; /* hover background, date range band */
+  --color-quaternary: #f2f2f2; /* round icon buttons */
+  --color-arches: #c13515; /* errors */
+  --color-spruce: #008a05; /* success */
+  --color-spruce-text: #038026;
+  --color-discount: #e6f6e9;
+  --color-legal: #0d4daa;
+
+  /* Brand gradient: bg-rausch-gradient */
+  --background-image-rausch-gradient: linear-gradient(
+    to right,
+    #e61e4d 0%,
+    #e31c5f 50%,
+    #d70466 100%
+  );
+
+  /* Radii: rounded-8, rounded-pill, ... */
+  --radius-4: 4px;
+  --radius-8: 8px;
+  --radius-12: 12px;
+  --radius-16: 16px;
+  --radius-20: 20px;
+  --radius-24: 24px;
+  --radius-28: 28px;
+  --radius-32: 32px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-elevation1: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 2px 4px rgba(0, 0, 0, 0.16);
+  --shadow-elevation2: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 2px 6px rgba(0, 0, 0, 0.04),
+    0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-elevation3: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.1);
+  --shadow-elevation4: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 2px 6px rgba(0, 0, 0, 0.04),
+    0 4px 8px rgba(0, 0, 0, 0.08), 0 12px 30px rgba(0, 0, 0, 0.18);
+  --shadow-elevation5: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 2px 6px rgba(0, 0, 0, 0.04),
+    0 6px 8px rgba(0, 0, 0, 0.08), 0 16px 56px rgba(0, 0, 0, 0.18);
+  --shadow-secondary: 0 6px 16px rgba(0, 0, 0, 0.12);
+  --shadow-primary: 0 6px 20px rgba(0, 0, 0, 0.2);
+  --shadow-high: 0 8px 28px rgba(0, 0, 0, 0.28);
+
+  /* Type scale (size / line-height / weight): text-listing-title, text-section, ... */
+  --text-listing-title: 26px;
+  --text-listing-title--line-height: 30px;
+  --text-listing-title--font-weight: 500;
+  --text-section: 22px;
+  --text-section--line-height: 26px;
+  --text-section--font-weight: 500;
+  --text-row: 20px;
+  --text-row--line-height: 24px;
+  --text-row--font-weight: 600;
+  --text-card: 15px;
+  --text-card--line-height: 19px;
+  --text-card--font-weight: 500;
+  --text-card-home: 13px;
+  --text-card-home--line-height: 16px;
+  --text-card-home--font-weight: 500;
+  --text-tab: 14px;
+  --text-tab--line-height: 18px;
+  --text-tab--font-weight: 500;
+  --text-label: 12px;
+  --text-label--line-height: 16px;
+  --text-label--font-weight: 500;
+  --text-button: 16px;
+  --text-button--line-height: 20px;
+  --text-button--font-weight: 500;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0.1, 0.9, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Breakpoints found in Airbnb CSS */
+  --breakpoint-sm: 550px;
+  --breakpoint-md: 744px;
+  --breakpoint-lg: 950px;
+  --breakpoint-xl: 1060px;
+  --breakpoint-2xl: 1440px;
+}
+
+body {
+  background: #fff;
+  color: var(--color-hof);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.animate-modal-in {
+  animation: modal-in 350ms var(--ease-enter);
+}
+.animate-fade-in {
+  animation: fade-in 200ms var(--ease-standard);
+}
+.skeleton {
+  background: linear-gradient(90deg, #ebebeb 25%, #f7f7f7 50%, #ebebeb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
