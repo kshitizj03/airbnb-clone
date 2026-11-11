@@ -8,6 +8,7 @@ import { buttonStyles } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import { placeName } from "@/lib/format";
 import type { HostListingCard } from "@/lib/types";
 
 export function HostListingsPage() {
@@ -62,7 +63,7 @@ export function HostListingsPage() {
                 {l.title}
               </Link>
               <p className="text-card-home font-normal text-secondary">
-                Home in {l.city}, {l.state}
+                Home in {placeName(l.city, l.state)}
               </p>
               <p className="text-label font-normal text-secondary">{l.upcoming_bookings} upcoming</p>
             </li>

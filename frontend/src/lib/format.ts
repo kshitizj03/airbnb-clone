@@ -23,3 +23,7 @@ export function dateSummary(from?: Date, to?: Date): string {
   if (from && to) return formatDateRange(from, to);
   return from ? format(from, "d MMM") : "";
 }
+
+/** Joins place parts, skipping blanks and repeats: ("Bali", "Bali", "Indonesia") -> "Bali, Indonesia". */
+export const placeName = (...parts: (string | null | undefined)[]): string =>
+  parts.filter((p, i): p is string => !!p && parts.indexOf(p) === i).join(", ");

@@ -12,7 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { api, ApiError } from "@/lib/api";
-import { formatINR } from "@/lib/format";
+import { formatINR, placeName } from "@/lib/format";
 import { EMPTY_DRAFT, sectionError, sectionOk, type Draft, type SectionId } from "@/lib/listing-draft";
 import type { Amenity, ListingDetail } from "@/lib/types";
 import { PlaceTypeField } from "./fields/PlaceTypeField";
@@ -132,7 +132,7 @@ function Review({ draft }: { draft: Draft }) {
       <div className="space-y-3 p-6">
         <h2 className="text-listing-title">{draft.title}</h2>
         <p className="text-secondary">
-          {TYPE_LABEL[draft.property_type]} · {PLACE_LABEL[draft.place_type]} in {draft.city}, {draft.state}
+          {TYPE_LABEL[draft.property_type]} · {PLACE_LABEL[draft.place_type]} in {placeName(draft.city, draft.state)}
         </p>
         <p className="text-secondary">
           {plural(draft.max_guests, "guest")} · {plural(draft.bedrooms, "bedroom")} · {plural(draft.beds, "bed")} · {plural(draft.bathrooms, "bathroom")}

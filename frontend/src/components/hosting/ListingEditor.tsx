@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { api, ApiError } from "@/lib/api";
-import { formatINR } from "@/lib/format";
+import { formatINR, placeName } from "@/lib/format";
 import { pick, sectionDirty, sectionError, sectionOk, toDraft, type Draft, type SectionId } from "@/lib/listing-draft";
 import type { ListingDetail } from "@/lib/types";
 import { SectionField, useInvalidateListings } from "./shared";
@@ -28,7 +28,7 @@ const SECTIONS: { id: SectionId; label: string; summary: (l: ListingDetail) => s
   { id: "title", label: "Title", summary: (l) => l.title },
   { id: "description", label: "Description", summary: (l) => l.description },
   { id: "type", label: "Property type", summary: (l) => `${PLACE[l.place_type]} · ${KIND[l.property_type]}` },
-  { id: "location", label: "Location", summary: (l) => [l.address, l.city, l.state].join(", ") },
+  { id: "location", label: "Location", summary: (l) => placeName(l.address, l.city, l.state) },
   { id: "basics", label: "Guests and rooms", summary: (l) => `${plural(l.max_guests, "guest")} · ${plural(l.bedrooms, "bedroom")} · ${plural(l.beds, "bed")} · ${plural(l.bathrooms, "bathroom")}` },
   { id: "amenities", label: "Amenities", summary: (l) => `${l.amenities.length} amenit${l.amenities.length === 1 ? "y" : "ies"}` },
   { id: "pricing", label: "Pricing", summary: (l) => `${formatINR(l.price_per_night)} per night${l.cleaning_fee > 0 ? ` + ${formatINR(l.cleaning_fee)} cleaning` : ""}` },

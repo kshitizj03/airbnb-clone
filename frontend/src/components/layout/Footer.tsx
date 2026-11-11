@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Globe } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 const columns = [
   {
@@ -16,6 +19,8 @@ const columns = [
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
 export function Footer() {
+  // The listing wizard is full-screen on Airbnb, with no site footer.
+  if (usePathname().startsWith("/become-a-host")) return null;
   return (
     <footer className="border-t border-bebe bg-faint pb-20 md:pb-0">
       <div className="mx-auto max-w-[1760px] px-4 md:px-12">

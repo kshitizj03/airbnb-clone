@@ -32,7 +32,7 @@ Try it in six steps:
 | Wishlists | Heart a listing (creates or picks a wishlist), wishlist pages, remove items, delete lists |
 | Hosting | Dashboard with reservations, own listings, create-listing wizard with photo upload or URL, listing editor, soft delete (refused if upcoming bookings exist) |
 | Auth | Email and password sign-up and login, HttpOnly session cookie, demo buttons |
-| Placeholders | Messaging, Experiences, Services, payments and identity verification show a "Coming soon" page |
+| Placeholders | Messages, Experiences, Services, profile and the footer links open a "Coming soon" page; checkout is a mocked card form |
 
 ## Tech stack
 
@@ -313,7 +313,7 @@ The frontend calendar rules have a small check script: `cd frontend && npm run c
 ## Assumptions
 
 - Payments are mocked: the card form is validated but never sent anywhere. Service fee (14%) and taxes (5%) are mock rates, and prices are in INR.
-- Messaging, Experiences, Services, payments and identity verification are out of scope and show "Coming soon". There is no Superhost computation, and the flexible dates tab is disabled.
+- Messaging, Experiences, Services and profile pages are out of scope and show "Coming soon". Identity verification is left out entirely. There is no Superhost computation, and the flexible dates tab is disabled.
 - A user becomes a host by creating a listing; there is no separate host sign-up.
 - A booking is confirmed immediately (no host approval step), and only upcoming stays can be cancelled.
 - Listing photos are Unsplash URLs; uploaded photos are stored on the server disk. The API accepts uploads up to 5 MB, but the hosted Vercel proxy limits request bodies to about 4.5 MB, so the UI caps photos at 4 MB. The map uses OpenStreetMap tiles.

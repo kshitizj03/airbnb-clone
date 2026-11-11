@@ -12,7 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { api, ApiError } from "@/lib/api";
-import { formatDateRange, formatINR } from "@/lib/format";
+import { formatDateRange, formatINR, placeName } from "@/lib/format";
 import type { Booking } from "@/lib/types";
 import { canCancel, ErrorState, LoginState, StatusBadge, tripGuests } from "./shared";
 
@@ -83,7 +83,7 @@ export function TripDetail({ id }: { id: string }) {
             <div>
               <h1 className="text-[32px] leading-10 font-medium">{l.title}</h1>
               <p className="mt-1 text-secondary">
-                {l.city}, {l.state}
+                {placeName(l.city, l.state)}
               </p>
             </div>
             <StatusBadge trip={trip} />

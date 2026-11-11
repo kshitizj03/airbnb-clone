@@ -14,7 +14,7 @@ import { useRoomParams } from "@/hooks/useRoomParams";
 import { useWishlists } from "@/hooks/useWishlists";
 import { api, ApiError } from "@/lib/api";
 import type { BookedRange } from "@/lib/date-range";
-import { formatINR } from "@/lib/format";
+import { formatINR, placeName } from "@/lib/format";
 import type { ListingDetail } from "@/lib/types";
 import { AmenitiesModal, AmenitiesSection } from "./AmenitiesSection";
 import { BookingCard, ReserveButton } from "./BookingCard";
@@ -226,7 +226,7 @@ function Listing({ listing }: { listing: ListingDetail }) {
       <section id="location" className={`${scrollTo} border-b border-bebe py-8`}>
         <h2 className="text-section">Where you&apos;ll be</h2>
         <p className="mt-2 text-base">
-          {listing.city}, {listing.state}, {listing.country}
+          {placeName(listing.city, listing.state, listing.country)}
         </p>
         {/* isolate: Leaflet's panes use high z-indexes that would otherwise paint over the header. */}
         <div className="relative isolate mt-6 h-[320px] overflow-hidden rounded-16 md:h-[480px]" role="region" aria-label={`Map of ${listing.city}`}>
