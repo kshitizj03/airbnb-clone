@@ -31,18 +31,19 @@ def _booking(listing: Listing, guest: User, check_in, nights: int, rng: random.R
     )
 
 
-def _review(booking: Booking, rng: random.Random) -> Review:
-    quality = rng.choices([5, 4, 3], weights=[6, 3, 1])[0]
+def _review(booking: Booking, p_five: float, rng: random.Random) -> Review:
+    # Airbnb-like: mostly 5s, some 4s, rare 3s. p_five is the listing's quality.
+    rating = 5 if rng.random() < p_five else (3 if rng.random() < 0.06 else 4)
 
     def score() -> int:
-        return min(5, max(1, quality + rng.choice([-1, 0, 0, 0, 1])))
+        return min(5, max(1, rating + rng.choice([-1, 0, 0, 0, 0, 0, 1])))
 
     scores = {k: score() for k in
               ("cleanliness", "accuracy", "checkin", "communication", "location", "value")}
     return Review(
         booking=booking, listing=booking.listing, author=booking.guest,
-        rating=round(sum(scores.values()) / len(scores)), **scores,
-        comment=rng.choice(REVIEW_COMMENTS[quality]),
+        rating=rating, **scores,
+        comment=rng.choice(REVIEW_COMMENTS[rating]),
         created_at=datetime.combine(booking.check_out, time(10, 0)),
     )
 
@@ -89,11 +90,12 @@ def seed(db: Session) -> None:
     # Past stays walk backwards from today with gaps, so a listing's stays never overlap.
     for listing in listings:
         end = now - timedelta(days=rng.randint(3, 20))
+        p_five = rng.choices([0.98, 0.85, 0.65], weights=[45, 40, 15])[0]  # listing quality tier
         for _ in range(rng.randint(5, 15)):
             nights = rng.randint(2, 5)
             booking = _booking(listing, rng.choice(guests), end - timedelta(days=nights), nights, rng)
             db.add(booking)
-            db.add(_review(booking, rng))
+            db.add(_review(booking, p_five, rng))
             end -= timedelta(days=nights + rng.randint(2, 15))
 
     # Future stays on distinct listings (one each), so they cannot overlap either.

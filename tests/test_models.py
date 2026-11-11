@@ -1,3 +1,4 @@
+import statistics
 from datetime import date
 
 import pytest
@@ -64,6 +65,19 @@ def test_seed_is_deterministic_and_complete(db):
     assert db.scalar(select(func.count(Booking.id)).where(Booking.check_in > today())) >= 15
     seed(db)  # second call is a no-op
     assert db.scalar(select(func.count(User.id))) == 10
+
+
+def test_seed_ratings_look_like_airbnb(db):
+    seed(db)
+    scores = ("rating", "cleanliness", "accuracy", "checkin", "communication", "location", "value")
+    averages = []
+    for listing in db.scalars(select(Listing)):
+        reviews = listing.reviews
+        assert all(1 <= getattr(r, k) <= 5 for r in reviews for k in scores)
+        averages.append((sum(r.rating for r in reviews) / len(reviews), len(reviews)))
+    assert min(a for a, _ in averages) >= 4.4
+    assert statistics.median(a for a, _ in averages) >= 4.75
+    assert sum(1 for a, n in averages if a >= 4.9 and n >= 5) >= 15
 
 
 def test_health(client):
