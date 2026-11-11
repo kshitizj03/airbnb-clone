@@ -2,7 +2,7 @@ services:
   - type: web
     name: stayhub-api
     runtime: python
-    plan: starter
+    plan: 0.5c-512mb
     region: singapore
     rootDir: backend
     buildCommand: pip install -r requirements.txt
