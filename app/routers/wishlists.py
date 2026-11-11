@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.cards import rated_listings, to_card
@@ -26,10 +27,14 @@ def _owned(db: Session, wishlist_id: int, user: User) -> Wishlist:
     return wishlist
 
 
+def _is_saved(db: Session, wishlist_id: int, listing_id: int) -> bool:
+    return db.get(WishlistItem, (wishlist_id, listing_id)) is not None
+
+
 def _save(db: Session, wishlist: Wishlist, listing_id: int) -> None:
     now = datetime.now()
     wishlist.updated_at = now
-    if db.get(WishlistItem, (wishlist.id, listing_id)) is None:  # saving twice is a no-op
+    if not _is_saved(db, wishlist.id, listing_id):  # saving twice is a no-op
         db.add(WishlistItem(wishlist_id=wishlist.id, listing_id=listing_id, created_at=now))
     db.flush()
 
@@ -78,7 +83,8 @@ def create(body: WishlistIn, db: Session = Depends(get_db), user: User = Depends
 def saved(db: Session = Depends(get_db), user: User = Depends(current_user)):
     rows = db.execute(
         select(WishlistItem.listing_id, WishlistItem.wishlist_id).join(Wishlist)
-        .where(Wishlist.user_id == user.id).order_by(Wishlist.updated_at, Wishlist.id)
+        .join(Listing, Listing.id == WishlistItem.listing_id)
+        .where(Wishlist.user_id == user.id, Listing.deleted_at.is_(None)).order_by(Wishlist.updated_at, Wishlist.id)
     ).all()
     return dict(rows)  # least recent list first, so the most recently updated list overwrites
 
@@ -107,7 +113,10 @@ def save_item(wishlist_id: int, body: SaveIn, db: Session = Depends(get_db),
               user: User = Depends(current_user)):
     wishlist = _owned(db, wishlist_id, user)
     get_live_listing(db, body.listing_id)
-    _save(db, wishlist, body.listing_id)
+    try:
+        _save(db, wishlist, body.listing_id)
+    except IntegrityError:  # a concurrent request saved it first: already saved, so still 200
+        db.rollback()
     out = _outs(db, [wishlist])[0]
     db.commit()
     return out
