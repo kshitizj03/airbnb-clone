@@ -17,9 +17,22 @@ export function StartSearching({ className = "" }: { className?: string }) {
   );
 }
 
+/** Shown instead of wishlist data when nobody is logged in. */
+export function WishlistLogin() {
+  const authModal = useAuthModal();
+  return (
+    <div className="flex flex-col items-center gap-3 px-6 py-24 text-center">
+      <h1 className="text-section">Log in to view your wishlists</h1>
+      <p className="text-secondary">You can create, view or edit wishlists once you have logged in.</p>
+      <Button variant="primary" className="mt-2" onClick={() => authModal.open("Log in to view your wishlists")}>
+        Log in
+      </Button>
+    </div>
+  );
+}
+
 export function WishlistsPage() {
   const { user, isLoading } = useAuth();
-  const authModal = useAuthModal();
   // Same key as the provider's query, so the two share one cache entry.
   const { data, isError, refetch } = useQuery({
     queryKey: ["wishlists"],
@@ -34,17 +47,7 @@ export function WishlistsPage() {
       </div>
     );
   }
-  if (!user) {
-    return (
-      <div className="flex flex-col items-center gap-3 px-6 py-24 text-center">
-        <h1 className="text-section">Log in to view your wishlists</h1>
-        <p className="text-secondary">You can create, view or edit wishlists once you have logged in.</p>
-        <Button variant="primary" className="mt-2" onClick={() => authModal.open("Log in to view your wishlists")}>
-          Log in
-        </Button>
-      </div>
-    );
-  }
+  if (!user) return <WishlistLogin />;
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 pt-8 pb-16 lg:px-10">

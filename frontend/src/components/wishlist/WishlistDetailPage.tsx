@@ -5,17 +5,18 @@ import { ChevronLeft, MoreHorizontal } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { ErrorState, LoginState } from "@/components/trips/shared";
+import { ErrorState } from "@/components/trips/shared";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { api, ApiError } from "@/lib/api";
 import type { WishlistDetail } from "@/lib/types";
-import { StartSearching } from "./WishlistsPage";
+import { StartSearching, WishlistLogin } from "./WishlistsPage";
 
 // Leaflet touches `window`, so the map is only ever loaded in the browser.
 const ListingsMap = dynamic(() => import("@/components/map/ListingsMap").then((m) => m.ListingsMap), {
@@ -27,7 +28,20 @@ export function WishlistDetailPage({ id }: { id: string }) {
   const { user, isLoading } = useAuth();
   const qc = useQueryClient();
   const router = useRouter();
+  const isDesktop = useIsDesktop();
   const [menuOpen, setMenuOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  // Escape closes the menu and puts focus back on the button that opened it.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setMenuOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Under ["wishlists"], so the heart flow's settle() (which invalidates that prefix) refetches this after every un-heart.
@@ -63,7 +77,7 @@ export function WishlistDetailPage({ id }: { id: string }) {
       </div>
     );
   }
-  if (!user) return <LoginState />;
+  if (!user) return <WishlistLogin />;
   if (error instanceof ApiError && (error.status === 404 || error.status === 422)) notFound();
   if (error) return <ErrorState message="We could not load this wishlist." onRetry={() => refetch()} />;
 
@@ -76,6 +90,7 @@ export function WishlistDetailPage({ id }: { id: string }) {
           </Link>
           <div className="relative">
             <button
+              ref={triggerRef}
               type="button"
               aria-label="Wishlist options"
               aria-haspopup="menu"
@@ -93,6 +108,7 @@ export function WishlistDetailPage({ id }: { id: string }) {
                   <button
                     type="button"
                     role="menuitem"
+                    autoFocus
                     className="w-full px-4 py-2 text-left hover:bg-faint"
                     onClick={() => {
                       setMenuOpen(false);
@@ -132,9 +148,12 @@ export function WishlistDetailPage({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="sticky top-[97px] hidden h-[calc(100vh-113px)] w-[40%] shrink-0 overflow-hidden rounded-20 border border-bebe lg:mt-6 lg:block">
-        <ListingsMap listings={items} hoveredId={null} savedIds={savedIds} />
-      </div>
+      {/* Mounted only on desktop, so phones never download or build the map. */}
+      {isDesktop && (
+        <div className="sticky top-[97px] h-[calc(100vh-113px)] w-[40%] shrink-0 overflow-hidden rounded-20 border border-bebe lg:mt-6">
+          <ListingsMap listings={items} hoveredId={null} savedIds={savedIds} />
+        </div>
+      )}
 
       <Modal
         open={confirmOpen}
