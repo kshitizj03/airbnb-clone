@@ -87,3 +87,8 @@ def test_seed_ratings_look_like_airbnb(db):
 
 def test_health(client):
     assert client.get("/api/health").json() == {"ok": True}
+
+
+def test_root_redirects_to_docs(client):
+    r = client.get("/", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/docs"
