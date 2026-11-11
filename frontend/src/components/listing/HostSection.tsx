@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck } from "lucide-react";
+import { Medal, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Host } from "@/lib/types";
@@ -15,7 +15,10 @@ export function HostRow({ host }: { host: Host }) {
       <Avatar name={host.name} src={host.avatar_url} size={40} />
       <div>
         <p className="text-base font-medium">Hosted by {host.name}</p>
-        <p className="text-sm text-secondary">{hostingText(host)}</p>
+        <p className="text-sm text-secondary">
+          {host.is_superhost && "Superhost · "}
+          {hostingText(host)}
+        </p>
       </div>
     </div>
   );
@@ -35,7 +38,10 @@ export function MeetHost({ host }: { host: Host }) {
           <div className="flex flex-col items-center text-center">
             <Avatar name={host.name} src={host.avatar_url} size={104} />
             <p className="mt-3 text-[32px] leading-9 font-semibold">{host.name}</p>
-            <p className="text-sm">Host</p>
+            <p className="flex items-center gap-1 text-sm">
+              {host.is_superhost && <Medal size={14} />}
+              {host.is_superhost ? "Superhost" : "Host"}
+            </p>
           </div>
           <dl className="w-28 shrink-0 text-left">
             {stats.map(([value, label], i) => (
@@ -47,6 +53,12 @@ export function MeetHost({ host }: { host: Host }) {
           </dl>
         </div>
         <div>
+          {host.is_superhost && (
+            <div className="mb-8">
+              <h3 className="text-base font-semibold">{host.name.split(" ")[0]} is a Superhost</h3>
+              <p className="mt-2 text-base">Superhosts are experienced, highly rated hosts who are committed to providing great stays for guests.</p>
+            </div>
+          )}
           <h3 className="text-base font-semibold">Host details</h3>
           <p className="mt-2 text-base">
             {host.listing_count} listing{host.listing_count === 1 ? "" : "s"} on Airbnb

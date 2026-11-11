@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 from app.clock import today
 from app.models import Amenity
 from app.pricing import quote
+from app.routers.listings import is_superhost
 from tests.factories import make_booking, make_listing, make_review, make_user
 
 
@@ -120,6 +121,29 @@ def test_detail_and_404_for_deleted(client, db):
         r = client.get(path)
         assert r.status_code == 404 and r.json()["error"]["code"] == "listing_not_found"
     assert _ids(client.get("/api/listings")) == [listing.id]
+
+
+def test_superhost_rule_boundaries():
+    assert is_superhost(4.8, 10)
+    assert not is_superhost(4.79, 10)
+    assert not is_superhost(4.8, 9)
+    assert not is_superhost(None, 10)
+
+
+def test_detail_superhost_counts_completed_stays_only(client, db):
+    host, guest = make_user(db, "h@x.com"), make_user(db, "g@x.com")
+    listing = make_listing(db, host)
+    past = today() - timedelta(days=100)
+    for i in range(9):  # nine finished, reviewed stays
+        start = past + timedelta(days=3 * i)
+        make_review(db, make_booking(db, listing, guest, start, start + timedelta(days=2)))
+    make_booking(db, listing, guest, past - timedelta(days=9), past - timedelta(days=7),
+                 status="cancelled")  # cancelled: not a stay
+    make_booking(db, listing, guest, today(), today() + timedelta(days=2))  # not finished yet
+    path = f"/api/listings/{listing.id}"
+    assert client.get(path).json()["host"]["is_superhost"] is False
+    make_booking(db, listing, guest, past - timedelta(days=5), past - timedelta(days=3))
+    assert client.get(path).json()["host"]["is_superhost"] is True
 
 
 def test_availability_returns_booked_ranges(client, db):

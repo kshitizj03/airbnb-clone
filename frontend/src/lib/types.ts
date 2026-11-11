@@ -56,6 +56,7 @@ export interface Host {
   listing_count: number;
   review_count: number;
   rating: number | null;
+  is_superhost?: boolean; // missing from an older backend: treat as not a Superhost
 }
 
 export interface RatingBreakdown {

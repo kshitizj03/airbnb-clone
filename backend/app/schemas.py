@@ -85,6 +85,7 @@ class HostOut(BaseModel):
     listing_count: int
     review_count: int
     rating: float | None
+    is_superhost: bool
 
 
 class RatingBreakdown(BaseModel):

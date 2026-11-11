@@ -123,6 +123,11 @@ def _avg(value) -> float | None:
     return round(value, 2) if value is not None else None
 
 
+def is_superhost(rating: float | None, completed_stays: int) -> bool:
+    """Superhost: average rating of at least 4.8 over at least 10 completed stays."""
+    return rating is not None and rating >= 4.8 and completed_stays >= 10
+
+
 def _detail(db: Session, listing: Listing) -> ListingDetail:
     listing_id = listing.id
     averages = db.execute(
@@ -145,6 +150,11 @@ def _detail(db: Session, listing: Listing) -> ListingDetail:
         .select_from(Listing).outerjoin(Review, Review.listing_id == Listing.id)
         .where(Listing.host_id == listing.host_id, Listing.deleted_at.is_(None))
     ).one()
+    completed_stays = db.scalar(
+        select(func.count()).select_from(Booking).join(Listing)
+        .where(Listing.host_id == listing.host_id, Listing.deleted_at.is_(None),
+               Booking.status == "confirmed", Booking.check_out <= clock.today())
+    )
     host = listing.host
     card = to_card(listing, averages[0], averages[7]).model_dump()
     card["photos"] = [p.url for p in listing.photos]  # detail shows all, cards only 5
@@ -154,7 +164,8 @@ def _detail(db: Session, listing: Listing) -> ListingDetail:
         amenities=sorted(listing.amenities, key=lambda a: (a.category, a.name)),
         host=HostOut(id=host.id, name=host.name, avatar_url=host.avatar_url, bio=host.bio,
                      joined_year=host.created_at.year, listing_count=host_listings,
-                     review_count=host_reviews, rating=_avg(host_rating)),
+                     review_count=host_reviews, rating=_avg(host_rating),
+                     is_superhost=is_superhost(_avg(host_rating), completed_stays)),
         rating_breakdown=breakdown, pets_allowed=listing.pets_allowed,
         instant_book=listing.instant_book, cleaning_fee=listing.cleaning_fee,
         max_guests=listing.max_guests,
