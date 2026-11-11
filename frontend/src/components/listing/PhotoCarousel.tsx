@@ -1,10 +1,11 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { useRef, useState } from "react";
 
 /** Swipeable photo strip (CSS scroll-snap) with dots and hover arrows. The caller sizes it and rounds it. */
-export function PhotoCarousel({ photos, alt }: { photos: string[]; alt: string }) {
+export function PhotoCarousel({ photos, alt, href }: { photos: string[]; alt: string; href: string }) {
   const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
 
@@ -14,7 +15,7 @@ export function PhotoCarousel({ photos, alt }: { photos: string[]; alt: string }
   }
 
   const arrow =
-    "absolute top-1/2 z-10 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-elevation1 transition hover:scale-105 hover:bg-white group-hover:flex disabled:hidden";
+    "absolute top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 opacity-0 shadow-elevation1 transition hover:scale-105 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 disabled:hidden! [@media(hover:none)]:pointer-events-none";
 
   return (
     <div className="relative size-full overflow-hidden">
@@ -24,14 +25,11 @@ export function PhotoCarousel({ photos, alt }: { photos: string[]; alt: string }
         className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {photos.map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={src}
-            src={src}
-            alt={i === 0 ? alt : ""}
-            loading={i === 0 ? "eager" : "lazy"}
-            className="size-full shrink-0 snap-center object-cover"
-          />
+          // The photo itself is the link, so the strip stays swipeable and a tap still opens the listing.
+          <Link key={src} href={href} tabIndex={-1} draggable={false} className="size-full shrink-0 snap-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={src} alt={i === 0 ? alt : ""} loading={i === 0 ? "eager" : "lazy"} draggable={false} className="size-full object-cover" />
+          </Link>
         ))}
       </div>
       {photos.length > 1 && (

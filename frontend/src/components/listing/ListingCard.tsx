@@ -65,10 +65,11 @@ export function ListingCard({ listing: l, variant, onHover, href = `/rooms/${l.i
   return (
     <div className="group relative" onMouseEnter={() => onHover?.(l.id)} onMouseLeave={() => onHover?.(null)}>
       <div className="relative aspect-[4/3] overflow-hidden rounded-20 bg-bebe">
-        <PhotoCarousel photos={l.photos} alt={l.title} />
+        <PhotoCarousel photos={l.photos} alt={l.title} href={href} />
         {badge}
         <HeartButton listing={l} />
       </div>
+      <div className="relative mt-3">
       <div className="mt-3 flex items-baseline justify-between gap-2 text-card">
         <Link href={href} className={`truncate ${link}`}>
           {cardTitle(l)}
@@ -93,6 +94,7 @@ export function ListingCard({ listing: l, variant, onHover, href = `/rooms/${l.i
           </>
         )}
       </p>
+      </div>
     </div>
   );
 }
