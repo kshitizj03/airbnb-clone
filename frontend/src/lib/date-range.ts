@@ -1,6 +1,6 @@
 // Pure date-range rules for the calendar. Booked ranges are half open: [check_in, check_out),
 // so the night of check_in is taken but a guest may still check OUT on a booked range's check_in day.
-// Checked by date-range.check.mjs (run: node src/lib/date-range.check.mjs).
+// Checked by date-range.check.mjs (run: npm run check:dates, needs Node 22.18+).
 import { isAfter, isBefore } from "date-fns";
 
 export type DateRange = { from?: Date; to?: Date };

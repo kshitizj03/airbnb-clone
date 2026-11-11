@@ -3,7 +3,11 @@ import { buttonStyles } from "@/components/ui/Button";
 
 // "identity-verification" -> "Identity verification"
 const toLabel = (slug: string) => {
-  const words = decodeURIComponent(slug).replace(/-/g, " ");
+  let words = slug;
+  try {
+    words = decodeURIComponent(slug); // throws on a malformed % sequence
+  } catch {}
+  words = words.replace(/-/g, " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 

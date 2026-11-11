@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:dates": "node src/lib/date-range.check.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.107.1",

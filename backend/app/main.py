@@ -18,16 +18,16 @@ def create_app(init_db: bool = True) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         if init_db:
-            # On Render the disk is only mounted at runtime, so build and seed on startup.
+            # Build and seed on startup, not at build time: the persistent data folder (e.g. /home on Azure) is only there at runtime.
             db_file = make_url(get_settings().database_url).database
-            if db_file:  # the disk is empty on first boot, so its folder may not exist yet
+            if db_file:  # the data folder is empty on first boot, so it may not exist yet
                 Path(db_file).parent.mkdir(parents=True, exist_ok=True)
             Base.metadata.create_all(engine)
             with SessionLocal() as db:
                 seed(db)
         yield
 
-    app = FastAPI(title="StayHub API", lifespan=lifespan)
+    app = FastAPI(title="Airbnb clone API", lifespan=lifespan)
 
     register_error_handlers(app)
     app.include_router(auth.router)

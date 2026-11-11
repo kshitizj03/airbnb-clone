@@ -38,7 +38,7 @@ export function Footer() {
 
         <div className="flex flex-col gap-4 py-6 text-sm md:flex-row md:items-center md:justify-between">
           <p className="flex flex-wrap gap-x-2">
-            <span>&copy; 2026 Airbnb, Inc.</span>
+            <span>&copy; 2026 Airbnb clone</span>
             <span aria-hidden>&middot;</span>
             <Link href="/coming-soon/privacy" className="hover:underline">
               Privacy

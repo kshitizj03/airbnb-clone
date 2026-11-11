@@ -1,13 +1,15 @@
-# StayHub
+# Airbnb clone
 
 An Airbnb-style stays marketplace: search with dates and filters, listing pages with a calendar and a live price quote, bookings with double-booking protection, wishlists, and a host dashboard with a listing editor. Next.js frontend, FastAPI backend, SQLite database.
+
+The UI look and copy mirror Airbnb on purpose, because the assignment grades similarity; no Airbnb assets (logo files, images) are copied.
 
 ## Live demo
 
 - App: https://airbnb-clone-kshitiz.vercel.app
 - API: https://stayhub-api-kj-g3amd8gmg4gydhdp.centralindia-01.azurewebsites.net (interactive docs at `/docs`)
 
-No sign-up needed: the login modal has **Continue as demo guest** and **Continue as demo host** buttons (`demo.guest@stayhub.test` and `demo.host@stayhub.test`). Normal sign-up and login also work.
+No sign-up needed: the login modal has **Continue as demo guest** and **Continue as demo host** buttons (`demo.guest@airbnb-clone.test` and `demo.host@airbnb-clone.test`). Normal sign-up and login also work.
 
 The API runs on a small Azure plan, so the first request after a long idle period can take a few seconds.
 
@@ -18,7 +20,7 @@ Try it in six steps:
 3. Click **Reserve**.
 4. Confirm with any test card, e.g. `4242 4242 4242 4242`, any future expiry, any 3-digit CVC.
 5. See the confirmation banner, then the booking under **Trips** (you can cancel it there).
-6. Log in as the demo host and create a listing from **Become a host**; it appears in search.
+6. Log in as the demo host, click **Switch to hosting**, open **Listings** and create a listing with the **+** button; it appears in search.
 
 ## Features
 
@@ -200,7 +202,7 @@ Rounding is half up to whole rupees. The rates are mock values (see Assumptions)
 
 ## API overview
 
-All routes are under `/api`; interactive docs are at `<API>/docs`. Errors share one shape: `{"error": {"code", "message", "fields?"}}` with status 400, 401, 403, 404, 409, 413, 415 or 422.
+All routes are under `/api`; interactive docs are at `<API>/docs`. Errors share one shape: `{"error": {"code", "message", "fields?"}}` with status 401, 403, 404, 409, 413, 415 or 422.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
@@ -209,8 +211,8 @@ All routes are under `/api`; interactive docs are at `<API>/docs`. Errors share 
 | POST | `/api/auth/demo` | - | Log in as the seeded demo `guest` or `host` |
 | POST | `/api/auth/logout` | user | Clear cookie |
 | GET | `/api/auth/me` | optional | Current user, or 401 |
-| GET | `/api/listings` | optional | Search and filter, 18 per page |
-| GET | `/api/listings/{id}` | optional | Listing detail |
+| GET | `/api/listings` | - | Search and filter, 18 per page |
+| GET | `/api/listings/{id}` | - | Listing detail |
 | GET | `/api/listings/{id}/availability` | - | Booked ranges for the next 365 days |
 | GET | `/api/listings/{id}/reviews` | - | Reviews, `page`, `sort=recent\|highest\|lowest` |
 | GET | `/api/listings/{id}/quote` | - | Price breakdown for dates and guests, or an error |
@@ -278,7 +280,7 @@ npm run dev
 
 Windows (PowerShell): same, but copy with `Copy-Item .env.example .env.local`.
 
-Set `BACKEND_URL=http://127.0.0.1:8000` in `.env.local` (it also defaults to that when unset). Open http://localhost:3000.
+`.env.example` sets `BACKEND_URL=http://127.0.0.1:8000` (the same value is used when it is unset or empty). Open http://localhost:3000.
 
 ### Backend settings (environment variables)
 
@@ -300,6 +302,8 @@ cd backend
 
 90 tests cover pricing, search filters, auth, bookings, host tools and wishlists. The ones that matter most: double booking under concurrency, back-to-back stays, IST "today", price snapshot, hostile uploads and ownership checks.
 
+The frontend calendar rules have a small check script: `cd frontend && npm run check:dates` (needs Node 22.18+, which runs TypeScript files directly).
+
 ## Deployment
 
 - **Frontend:** Vercel project with root directory `frontend` and env var `BACKEND_URL` set to the API URL. It auto-deploys from `main`.
@@ -312,7 +316,7 @@ cd backend
 - Messaging, Experiences, Services, payments and identity verification are out of scope and show "Coming soon". There is no Superhost computation, and the flexible dates tab is disabled.
 - A user becomes a host by creating a listing; there is no separate host sign-up.
 - A booking is confirmed immediately (no host approval step), and only upcoming stays can be cancelled.
-- Listing photos are Unsplash URLs; uploaded photos are stored on the server disk. The map uses OpenStreetMap tiles.
+- Listing photos are Unsplash URLs; uploaded photos are stored on the server disk. The API accepts uploads up to 5 MB, but the hosted Vercel proxy limits request bodies to about 4.5 MB, so the UI caps photos at 4 MB. The map uses OpenStreetMap tiles.
 - "Today" is computed in Asia/Kolkata for date validation.
 - Seed data is fictional and deterministic.
 

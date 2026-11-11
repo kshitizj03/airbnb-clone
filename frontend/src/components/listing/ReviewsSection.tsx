@@ -29,7 +29,7 @@ const CATEGORIES: [keyof RatingBreakdown, string, LucideIcon][] = [
 const reviewsUrl = (id: number, sort: Sort, page: number) =>
   `/api/listings/${id}/reviews?page=${page}&sort=${sort === "relevant" ? "recent" : sort}`; // no relevance score yet: recent stands in
 
-export const ratingLine = (l: ListingDetail) => (l.review_count === 0 || l.rating === null ? "New" : l.rating.toFixed(2));
+const ratingLine = (l: ListingDetail) => (l.review_count === 0 || l.rating === null ? "New" : l.rating.toFixed(2));
 
 /** "★ 4.45 · 11 reviews" or "★ New · No reviews yet" */
 export function ratingHeading(l: ListingDetail) {

@@ -10,6 +10,7 @@ from app.clock import today
 from app.config import get_settings
 from app.db import Base, SessionLocal, engine
 from app.models import Amenity, Booking, Listing, ListingPhoto, Review, User
+from app.pricing import quote
 from app.security import hash_password
 from app.seed_data import (
     AMENITIES, CITIES, DESCRIPTIONS, GUESTS, HOSTS, PHOTOS, REVIEW_COMMENTS,
@@ -19,14 +20,14 @@ N_FUTURE_BOOKINGS = 20
 
 
 def _booking(listing: Listing, guest: User, check_in, nights: int, rng: random.Random) -> Booking:
-    base = nights * listing.price_per_night + listing.cleaning_fee
-    service_fee, taxes = round(0.14 * base), round(0.05 * base)
+    check_out = check_in + timedelta(days=nights)
+    q = quote(listing.price_per_night, listing.cleaning_fee, check_in, check_out)
     adults = rng.randint(1, max(1, listing.max_guests - 1))
     return Booking(
         listing=listing, guest=guest, check_in=check_in,
-        check_out=check_in + timedelta(days=nights), adults=adults, nights=nights,
+        check_out=check_out, adults=adults, nights=nights,
         nightly_price=listing.price_per_night, cleaning_fee=listing.cleaning_fee,
-        service_fee=service_fee, taxes=taxes, total=base + service_fee + taxes,
+        service_fee=q.service_fee, taxes=q.taxes, total=q.total,
         status="confirmed",
     )
 
@@ -69,7 +70,7 @@ def seed(db: Session) -> None:
                 host=hosts[len(listings) % len(hosts)], title=title,
                 description=rng.choice(DESCRIPTIONS), property_type=property_type,
                 place_type=place_type,
-                address=f"{rng.randint(1, 120)}, {localities[i]}, {city}",
+                address=f"{rng.randint(1, 120)}, {localities[i]}",
                 city=city, state=state, country=country,
                 latitude=round(lat + rng.uniform(-0.05, 0.05), 5),
                 longitude=round(lng + rng.uniform(-0.05, 0.05), 5),

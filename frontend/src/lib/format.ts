@@ -18,12 +18,6 @@ export function formatDateRange(a: Date, b: Date): string {
 
 export const nightsBetween = (a: Date, b: Date): number => differenceInCalendarDays(b, a);
 
-/** 2100 -> "₹2.1K", 950 -> "₹950", 110000 -> "₹110K" */
-export function shortPrice(n: number): string {
-  if (n < 1000) return `₹${n}`;
-  return `₹${parseFloat((n / 1000).toFixed(1))}K`;
-}
-
 /** Search bar text for a (maybe half chosen) range: "10–14 Dec", "10 Dec", or "" when empty. */
 export function dateSummary(from?: Date, to?: Date): string {
   if (from && to) return formatDateRange(from, to);

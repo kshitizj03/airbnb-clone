@@ -17,8 +17,8 @@ const tabs = [
   { label: "Services", href: "/coming-soon/services", Icon: ConciergeBell },
 ];
 
-/** Checkout and hosting pages get a logo-only header (no search, no tabs). */
-export const isLogoOnlyRoute = (pathname: string) => /^\/(book|hosting|become-a-host)(\/|$)/.test(pathname);
+/** Checkout and become-a-host pages get a logo-only header (no search, no tabs). */
+export const isLogoOnlyRoute = (pathname: string) => /^\/(book|become-a-host)(\/|$)/.test(pathname);
 
 // Stand-in while useSearchParams suspends, same size as the real thing so nothing jumps.
 const pillFallback = (className: string) => <div className={`rounded-pill border border-deco ${className}`} />;

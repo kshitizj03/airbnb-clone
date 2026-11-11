@@ -32,7 +32,7 @@ export function PhotosField({ value, onChange, error }: Props) {
 
   async function upload(file: File) {
     if (!TYPES.includes(file.type)) return setLocalError("Photos must be JPEG, PNG or WebP.");
-    if (file.size > 5 * 1024 * 1024) return setLocalError("Photos must be 5 MB or smaller.");
+    if (file.size > 4 * 1024 * 1024) return setLocalError("Photos must be 4 MB or smaller.");
     setLocalError(undefined);
     setUploading(true);
     const body = new FormData();
@@ -89,7 +89,7 @@ export function PhotosField({ value, onChange, error }: Props) {
         <input ref={fileRef} type="file" accept={TYPES.join(",")} hidden aria-label="Upload a photo file" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
       </div>
       <p className="mt-2 text-sm text-secondary">
-        {value.length} of {MAX} photos. JPEG, PNG or WebP, up to 5 MB each.
+        {value.length} of {MAX} photos. JPEG, PNG or WebP, up to 4 MB each.
       </p>
       <FieldError error={localError ?? error} />
 

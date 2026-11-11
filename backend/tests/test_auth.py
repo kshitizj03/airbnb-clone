@@ -63,7 +63,7 @@ def test_logout_clears_session(client):
 
 
 def test_demo_host_login(client, db):
-    make_user(db, email="demo.host@stayhub.test", name="Demo Host", is_host=True)
+    make_user(db, email="demo.host@airbnb-clone.test", name="Demo Host", is_host=True)
     r = client.post("/api/auth/demo", json={"role": "host"})
     assert r.status_code == 200
     assert r.json()["is_host"] is True

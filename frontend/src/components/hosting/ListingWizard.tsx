@@ -206,7 +206,7 @@ export function ListingWizard() {
         <Logo className="size-8" />
       </Link>
       <Button variant="outline" className="h-10 text-sm" onClick={() => setExiting(true)}>
-        Save &amp; exit
+        Exit
       </Button>
     </header>
   );
