@@ -38,7 +38,7 @@ export function PhotosField({ value, onChange, error }: Props) {
     const body = new FormData();
     body.append("file", file);
     try {
-      const { url: uploaded } = await api<{ url: string }>("/api/uploads", { method: "POST", body });
+      const { url: uploaded } = await api<{ url: string }>("/upload", { method: "POST", body });
       onChange([...value, uploaded]);
     } catch (e) {
       setLocalError(e instanceof ApiError ? e.message : "Upload failed. Please try again.");

@@ -30,7 +30,7 @@ Try it in six steps:
 | Listing page | Photo gallery and modal, amenities, description, reviews with rating breakdown and sorting, map, availability calendar with booked dates blocked, booking card with a live price quote, Superhost badge |
 | Booking | Server-computed price breakdown, checkout with a validated (mock) card form, confirmation page, Trips list, cancellation of upcoming stays, a star-rated review of each completed stay |
 | Wishlists | Heart a listing (creates or picks a wishlist), wishlist pages, remove items, delete lists |
-| Hosting | Dashboard with reservations, own listings, create-listing wizard with photo upload or URL, listing editor, soft delete (refused if upcoming bookings exist) |
+| Hosting | Dashboard with reservations, own listings, create-listing wizard with photo upload (Vercel Blob in production) or URL, listing editor, soft delete (refused if upcoming bookings exist) |
 | Auth | Email and password sign-up and login, HttpOnly session cookie, demo buttons |
 | Placeholders | Messages, Experiences, Services, profile and the footer links open a "Coming soon" page; checkout is a mocked card form |
 
@@ -50,12 +50,14 @@ Try it in six steps:
 flowchart LR
   B[Browser] --> V[Vercel: Next.js]
   V -- "rewrites /api/* and /uploads/*" --> A[Azure App Service: FastAPI]
-  A --> D[(SQLite file and uploads on /home)]
+  V -- "/upload: photo files" --> BL[(Vercel Blob)]
+  A --> D[(SQLite file on /home)]
 ```
 
 Key decisions:
 
 - **Proxy for a first-party cookie.** The browser only talks to the Vercel domain. Next.js rewrites `/api/*` and `/uploads/*` to the API, so the HttpOnly session cookie is first-party and no CORS is needed.
+- **Photo uploads to Vercel Blob.** In production the browser posts photos to `/upload`, a Next.js route handler (outside `/api`, which is rewritten to FastAPI). It checks the session by forwarding the cookie to `/api/auth/me`, checks size (4 MB) and the real type by magic bytes (JPEG, PNG, WebP; same rule as the backend), stores the file in a public Vercel Blob store and returns its absolute URL, which the listing saves like any other photo link. Without `BLOB_READ_WRITE_TOKEN` (local development) the handler passes the upload to the backend's `/api/uploads`, which stores it on disk.
 - **URL as search state.** Location, dates, guests and filters are query parameters, so any search is a shareable link and Back works as expected.
 - **Pricing is computed server-side only.** The quote endpoint and the booking endpoint use the same function; the client never sends a price.
 - **Soft delete for listings.** Bookings and reviews point at listings, so deleted listings must still render in past trips. They vanish from search and detail pages.
@@ -288,7 +290,7 @@ Windows (PowerShell): same, but copy with `Copy-Item .env.example .env.local`.
 | Variable | Default | Purpose |
 |---|---|---|
 | `DATABASE_URL` | `sqlite:///./app.db` | Database location |
-| `UPLOAD_DIR` | `./uploads` | Where uploaded photos are stored |
+| `UPLOAD_DIR` | `./uploads` | Where uploaded photos are stored when the frontend has no Blob token (local development) |
 | `JWT_SECRET` | dev value | Session signing key (set a real one in production) |
 | `COOKIE_SECURE` | `false` | Set `true` behind HTTPS |
 | `SQLITE_JOURNAL_MODE` | `WAL` | Use `DELETE` on network file shares |
@@ -303,12 +305,12 @@ cd backend
 
 95 tests cover pricing, search filters, auth, bookings, reviews, host tools and wishlists. The ones that matter most: double booking under concurrency, back-to-back stays, IST "today", price snapshot, hostile uploads and ownership checks.
 
-The frontend calendar rules have a small check script: `cd frontend && npm run check:dates` (needs Node 22.18+, which runs TypeScript files directly).
+The frontend calendar rules and the upload type check have small check scripts: `cd frontend && npm run check:dates && npm run check:images` (needs Node 22.18+, which runs TypeScript files directly).
 
 ## Deployment
 
-- **Frontend:** Vercel project with root directory `frontend` and env var `BACKEND_URL` set to the API URL. It auto-deploys from `main`.
-- **Backend:** Azure App Service (Linux, Python 3.11, Central India). The SQLite file and uploads live on the persistent `/home` share (`DATABASE_URL=sqlite:////home/data/app.db`, `UPLOAD_DIR=/home/data/uploads`). WAL needs shared memory, which a network share cannot provide, so production sets `SQLITE_JOURNAL_MODE=DELETE`.
+- **Frontend:** Vercel project with root directory `frontend` and env var `BACKEND_URL` set to the API URL. A public Vercel Blob store is connected to the project, which provides `BLOB_READ_WRITE_TOKEN` for photo uploads. It auto-deploys from `main`.
+- **Backend:** Azure App Service (Linux, Python 3.11, Central India). The SQLite file (and uploads from before Vercel Blob) live on the persistent `/home` share (`DATABASE_URL=sqlite:////home/data/app.db`, `UPLOAD_DIR=/home/data/uploads`). WAL needs shared memory, which a network share cannot provide, so production sets `SQLITE_JOURNAL_MODE=DELETE`.
 - **How the code gets there:** basic-auth publishing is disabled by subscription policy, so Local Git and FTP are unavailable. Instead, the `deploy-backend` branch is `git subtree split --prefix backend` of `main`; it is downloaded into `/home/site/wwwroot` over the App Service browser SSH, with a venv at `/home/site/antenv`. Startup command: `/home/site/antenv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --app-dir /home/site/wwwroot`.
 
 ## Assumptions
@@ -318,7 +320,7 @@ The frontend calendar rules have a small check script: `cd frontend && npm run c
 - A host is a Superhost when the average rating across their live listings is at least 4.8 and those listings have at least 10 completed stays (confirmed, checked out by today). It is computed on each request, like ratings.
 - A user becomes a host by creating a listing; there is no separate host sign-up.
 - A booking is confirmed immediately (no host approval step), and only upcoming stays can be cancelled.
-- Listing photos are Unsplash URLs; uploaded photos are stored on the server disk. The API accepts uploads up to 5 MB, but the hosted Vercel proxy limits request bodies to about 4.5 MB, so the UI caps photos at 4 MB. The map uses OpenStreetMap tiles.
+- Seeded listing photos are Unsplash URLs; hosts can also paste any https link. Uploaded photos go to Vercel Blob in production and to the backend's disk locally. Vercel functions accept request bodies up to about 4.5 MB, so uploads are capped at 4 MB (the backend alone would accept 5 MB). The map uses OpenStreetMap tiles.
 - "Today" is computed in Asia/Kolkata for date validation.
 - Seed data is fictional and deterministic.
 
