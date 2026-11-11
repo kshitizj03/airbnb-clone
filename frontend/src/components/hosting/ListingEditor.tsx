@@ -36,16 +36,17 @@ const SECTIONS: { id: SectionId; label: string; summary: (l: ListingDetail) => s
 
 export function ListingEditor({ id }: { id: string }) {
   const { user } = useAuth();
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetchedAfterMount, error, refetch } = useQuery({
     queryKey: ["listing", id],
     queryFn: () => api<ListingDetail>(`/api/listings/${id}`),
     enabled: !!user,
     retry: false,
+    refetchOnMount: "always", // the draft is seeded from this data, so never from a stale cache entry
   });
 
   if (error instanceof ApiError && error.status === 404) notFound();
   if (error) return <ErrorState message="We could not load this listing." onRetry={() => refetch()} />;
-  if (isLoading || !data)
+  if (isLoading || !data || !isFetchedAfterMount)
     return (
       <div className="mx-auto max-w-[1200px] space-y-4 px-4 py-8 md:px-12">
         <Skeleton className="h-10 w-64 rounded-8" />

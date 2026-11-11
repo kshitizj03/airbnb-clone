@@ -99,8 +99,9 @@ export function sectionError(id: SectionId, fields?: Record<string, string>): st
   return key ? fields[key] : undefined;
 }
 
+/** The section's values as sent to the API (and compared for dirtiness): text is trimmed, like the wizard does. */
 export function pick(d: Draft, id: SectionId): Partial<Draft> {
-  return Object.fromEntries(SECTION_KEYS[id].map((k) => [k, d[k]]));
+  return Object.fromEntries(SECTION_KEYS[id].map((k) => [k, typeof d[k] === "string" ? (d[k] as string).trim() : d[k]]));
 }
 
 export const sectionDirty = (id: SectionId, draft: Draft, saved: Draft) => JSON.stringify(pick(draft, id)) !== JSON.stringify(pick(saved, id));
