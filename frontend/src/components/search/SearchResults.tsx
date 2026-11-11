@@ -4,7 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { List, Map as MapIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useCurrentSearch } from "@/hooks/useCurrentSearch";
@@ -31,7 +31,7 @@ export function SearchResults() {
   const [mapOpen, setMapOpen] = useState(false); // mobile only: the map is a full-screen overlay
   const [hoveredId, setHoveredId] = useState<number | null>(null);
 
-  const page = search.page ?? 1;
+  const page = Math.max(1, search.page ?? 1); // ?page=0 reads as page 1
   const query = listingsQuery(search, page);
   const { data, isPending, isError, isPlaceholderData, refetch } = useQuery({
     queryKey: ["search", query],
@@ -58,7 +58,13 @@ export function SearchResults() {
   const roomQuery = toQuery({ ...search, ...NO_FILTERS, pets: search.pets, page: undefined });
   const hrefFor = (id: number) => `/rooms/${id}${roomQuery ? `?${roomQuery}` : ""}`;
 
-  const items = data?.items ?? [];
+  // A stale or hand-edited ?page=99: jump to the last real page instead of showing a false empty state.
+  const lastPage = data && !isPlaceholderData && data.pages > 0 && page > data.pages ? data.pages : null;
+  useEffect(() => {
+    if (lastPage) router.replace(searchHref({ ...search, page: lastPage }), { scroll: false });
+  });
+
+  const items = lastPage ? [] : (data?.items ?? []);
   const total = data?.total ?? 0;
   const heading = isPending
     ? null
@@ -94,6 +100,10 @@ export function SearchResults() {
                 </div>
               ))}
             </div>
+          ) : lastPage ? (
+            <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 2xl:grid-cols-3">
+              <Skeleton className="aspect-[4/3] w-full rounded-20" />
+            </div>
           ) : items.length === 0 ? (
             <div className="py-24 text-center md:text-left">
               <p className="text-section font-semibold">No exact matches</p>
@@ -107,7 +117,7 @@ export function SearchResults() {
             </div>
           )}
 
-          {data && !isError && (
+          {data && !isError && !lastPage && (
             <Pagination
               page={page}
               pages={data.pages}

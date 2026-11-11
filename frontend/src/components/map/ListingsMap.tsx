@@ -57,8 +57,8 @@ export function ListingsMap({ listings, hoveredId, savedIds, hrefFor = (id) => `
   const center = useMemo<[number, number]>(() => [20.6, 78.9], []);
 
   return (
-    <div className="relative size-full">
-      <MapContainer center={center} zoom={5} zoomControl={false} className="size-full" aria-label="Map of search results" scrollWheelZoom>
+    <div className="relative size-full" role="region" aria-label="Map of search results">
+      <MapContainer center={center} zoom={5} zoomControl={false} className="size-full" scrollWheelZoom>
         <TileLayer
           // CARTO's free Positron tiles now answer "API key required", so plain OpenStreetMap tiles, washed out in CSS (.leaflet-tile-pane).
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
