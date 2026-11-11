@@ -10,6 +10,8 @@ interface ModalProps {
   title?: string;
   footer?: ReactNode;
   size?: "sm" | "md" | "lg" | "full";
+  /** Stacking class; raise it for a modal opened from another full-screen layer. */
+  layer?: string;
   children: ReactNode;
 }
 
@@ -23,7 +25,7 @@ const widths = {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function Modal({ open, onClose, title, footer, size = "md", children }: ModalProps) {
+export function Modal({ open, onClose, title, footer, size = "md", layer = "z-50", children }: ModalProps) {
   // false on the server and during hydration, true after: document.body does not exist before that.
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -84,7 +86,7 @@ export function Modal({ open, onClose, title, footer, size = "md", children }: M
   // Portal to <body>: a modal opened from inside the fixed header would otherwise be trapped under its z-index.
   return createPortal(
     <div
-      className="animate-fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-6"
+      className={`animate-fade-in fixed inset-0 ${layer} flex items-end justify-center bg-black/50 md:items-center md:p-6`}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

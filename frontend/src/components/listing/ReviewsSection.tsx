@@ -68,10 +68,11 @@ function Summary({ listing, big }: { listing: ListingDetail; big?: boolean }) {
   );
 }
 
-function ReviewCard({ r, clamp, onMore }: { r: Review; clamp?: boolean; onMore?: () => void }) {
+// Only the modal copy carries the id: the preview cards on the page would otherwise be found first.
+function ReviewCard({ r, clamp, onMore, withId }: { r: Review; clamp?: boolean; onMore?: () => void; withId?: boolean }) {
   const years = new Date().getFullYear() - r.author_joined_year;
   return (
-    <article id={`review-${r.id}`} className="scroll-mt-4">
+    <article id={withId ? `review-${r.id}` : undefined} className="scroll-mt-4">
       <div className="flex items-center gap-3">
         <Avatar name={r.author_name} src={r.author_avatar_url} size={48} />
         <div>
@@ -182,7 +183,7 @@ export function ReviewsModal({ listing, focusId, onClose }: { listing: ListingDe
         ) : (
           <div className="mt-6 space-y-8">
             {reviews.map((r) => (
-              <ReviewCard key={r.id} r={r} />
+              <ReviewCard key={r.id} r={r} withId />
             ))}
           </div>
         )}

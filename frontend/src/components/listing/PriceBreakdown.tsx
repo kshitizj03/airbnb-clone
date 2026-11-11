@@ -5,7 +5,7 @@ import type { PriceQuote } from "@/lib/types";
 export function PriceBreakdown({ quote }: { quote: PriceQuote }) {
   const rows: [string, number][] = [
     [`${quote.nights} night${quote.nights === 1 ? "" : "s"} x ${formatINR(quote.nightly_price)}`, quote.subtotal],
-    ["Cleaning fee", quote.cleaning_fee],
+    ...(quote.cleaning_fee > 0 ? ([["Cleaning fee", quote.cleaning_fee]] as [string, number][]) : []),
     ["Airbnb service fee", quote.service_fee],
     ["Taxes", quote.taxes],
   ];

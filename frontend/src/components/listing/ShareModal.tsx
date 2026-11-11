@@ -28,7 +28,7 @@ export function ShareModal({ listing, onClose }: { listing: ListingDetail; onClo
   const mail = `mailto:?subject=${encodeURIComponent(listing.title)}&body=${encodeURIComponent(typeof window === "undefined" ? "" : window.location.href)}`;
 
   return (
-    <Modal open onClose={onClose} title="Share this place" size="sm">
+    <Modal open onClose={onClose} title="Share this place" size="sm" layer="z-[70]">
       <div className="p-6">
         <div className="flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}

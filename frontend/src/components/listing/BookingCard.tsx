@@ -73,6 +73,11 @@ export function BookingCard({ listing, bookedRanges }: { listing: ListingDetail;
             <button type="button" onClick={() => setOpen("dates")} className="block text-sm underline">
               {b.range.from && b.range.to ? formatDateRange(b.range.from, b.range.to) : "Add dates"}
             </button>
+            {b.errorMessage && (
+              <p role="alert" className="text-xs text-arches">
+                {b.errorMessage}
+              </p>
+            )}
           </div>
           {b.isOwner ? (
             <p className="text-sm font-medium">This is your listing</p>
