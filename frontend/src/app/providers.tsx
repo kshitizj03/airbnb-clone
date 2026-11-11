@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { AuthModalProvider } from "@/components/layout/AuthModal";
+import { WishlistProvider } from "@/hooks/useWishlists";
 
 export function Providers({ children }: { children: ReactNode }) {
   // useState so each browser session gets one client, not one per render.
@@ -13,7 +14,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={client}>
-      <AuthModalProvider>{children}</AuthModalProvider>
+      <AuthModalProvider>
+        <WishlistProvider>{children}</WishlistProvider>
+      </AuthModalProvider>
       <Toaster
         position="bottom-left"
         offset={{ left: 32, bottom: 60 }}
