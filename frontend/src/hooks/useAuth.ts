@@ -22,11 +22,11 @@ export function useAuth() {
     retry: false,
   });
 
-  // After login/logout, store the new user and drop every other cached query
+  // After login/logout, store the new user and reset every other cached query
   // (wishlists, trips, ...) so one account never sees another's data.
   function setUser(user: User | null) {
     qc.setQueryData(["me"], user);
-    qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "me" });
+    qc.resetQueries({ predicate: (q) => q.queryKey[0] !== "me" });
   }
 
   async function login(email: string, password: string) {
