@@ -140,3 +140,76 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
+
+/* Date range calendar: react-day-picker restyled to Airbnb (spec section 2, When panel). */
+.airbnb-cal.rdp-root {
+  --rdp-accent-color: #222222;
+  --rdp-accent-background-color: #f7f7f7;
+  --rdp-range_middle-background-color: #f7f7f7;
+  --rdp-range_start-date-background-color: #222222;
+  --rdp-range_end-date-background-color: #222222;
+  --rdp-months-gap: 32px;
+  --rdp-day-width: 44px;
+  --rdp-day-height: 44px;
+  --rdp-day_button-width: 42px;
+  --rdp-day_button-height: 42px;
+  --rdp-nav_button-width: 32px;
+  --rdp-nav_button-height: 32px;
+  --rdp-nav-height: 48px;
+  font-size: 14px;
+}
+.airbnb-cal .rdp-month_caption {
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+.airbnb-cal .rdp-weekday {
+  opacity: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6c6c6c;
+}
+.airbnb-cal .rdp-button_previous,
+.airbnb-cal .rdp-button_next {
+  border-radius: 50%;
+}
+.airbnb-cal .rdp-button_previous:hover:not(:disabled),
+.airbnb-cal .rdp-button_next:hover:not(:disabled) {
+  background: #f7f7f7;
+}
+.airbnb-cal .rdp-selected {
+  font-size: inherit;
+  font-weight: 500;
+}
+.airbnb-cal .rdp-day_button {
+  border: 1px solid transparent;
+}
+.airbnb-cal .rdp-day_button:hover:not(:disabled) {
+  border-color: #222222;
+}
+.airbnb-cal .rdp-range_middle .rdp-day_button {
+  border: 1px solid transparent;
+  border-radius: 100%;
+}
+.airbnb-cal .rdp-range_middle .rdp-day_button:hover:not(:disabled) {
+  border-color: #222222;
+  background: #fff;
+}
+.airbnb-cal .rdp-today:not(.rdp-outside):not(.rdp-selected) {
+  font-weight: 600;
+  color: inherit;
+}
+.airbnb-cal .rdp-disabled:not(.rdp-selected) {
+  opacity: 1;
+}
+.airbnb-cal .rdp-disabled .rdp-day_button {
+  color: #c1c1c1;
+  cursor: default;
+}
+.airbnb-cal .cal-booked .rdp-day_button:disabled {
+  text-decoration: line-through;
+}
+.airbnb-cal .rdp-day_button:focus-visible {
+  outline: 2px solid #222222;
+  outline-offset: 2px;
+}

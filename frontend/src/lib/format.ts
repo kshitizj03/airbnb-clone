@@ -23,3 +23,9 @@ export function shortPrice(n: number): string {
   if (n < 1000) return `₹${n}`;
   return `₹${parseFloat((n / 1000).toFixed(1))}K`;
 }
+
+/** Search bar text for a (maybe half chosen) range: "10–14 Dec", "10 Dec", or "" when empty. */
+export function dateSummary(from?: Date, to?: Date): string {
+  if (from && to) return formatDateRange(from, to);
+  return from ? format(from, "d MMM") : "";
+}

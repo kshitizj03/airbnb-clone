@@ -142,3 +142,10 @@ export interface WishlistDetail {
   name: string;
   items: ListingCard[];
 }
+
+export interface Destination {
+  city: string;
+  state: string;
+  country: string;
+  listing_count: number;
+}

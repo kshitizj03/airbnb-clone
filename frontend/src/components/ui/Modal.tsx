@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
   open: boolean;
@@ -74,7 +75,8 @@ export function Modal({ open, onClose, title, footer, size = "md", children }: M
 
   if (!open) return null;
 
-  return (
+  // Portal to <body>: a modal opened from inside the fixed header would otherwise be trapped under its z-index.
+  return createPortal(
     <div
       className="animate-fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center md:p-6"
       onMouseDown={(e) => {
@@ -107,6 +109,7 @@ export function Modal({ open, onClose, title, footer, size = "md", children }: M
         <div className="flex-1 overflow-y-auto">{children}</div>
         {footer && <div className="shrink-0 border-t border-bebe px-6 py-4">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
