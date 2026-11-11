@@ -64,6 +64,9 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // /hosting has its own header (app/hosting/layout.tsx).
+  if (pathname.startsWith("/hosting")) return null;
+
   // Inner pages always use the pill; the home page only after scrolling.
   const compact = (!onHome || scrolled) && expanded === null;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { CircleHelp, Heart, Menu, MessageSquare, Plane, Settings, User as UserIcon } from "lucide-react";
@@ -15,6 +15,7 @@ export function UserMenu() {
   const { user, logout } = useAuth();
   const authModal = useAuthModal();
   const router = useRouter();
+  const hosting = usePathname().startsWith("/hosting");
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -98,7 +99,7 @@ export function UserMenu() {
               {soon("account-settings", "Account settings", Settings)}
               {soon("help-centre", "Help Centre", CircleHelp)}
               {divider}
-              {user.is_host ? link("/hosting", "Switch to hosting") : link("/become-a-host", "Become a host")}
+              {hosting ? link("/", "Switch to travelling") : user.is_host ? link("/hosting", "Switch to hosting") : link("/become-a-host", "Become a host")}
               {divider}
               <button type="button" role="menuitem" className={row} onClick={onLogout}>
                 Log out
