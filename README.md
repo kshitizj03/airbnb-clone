@@ -13,14 +13,27 @@ No sign-up needed: the login modal has **Continue as demo guest** and **Continue
 
 The API runs on a small Azure plan, so the first request after a long idle period can take a few seconds.
 
-Try it in six steps:
+Try it:
 
 1. Search **Goa** with check-in and check-out dates (the cards show the total "for N nights").
-2. Open a listing (gallery, calendar, booking card quote).
+2. Open a listing (gallery, calendar, booking card quote, Superhost badge in the host section).
 3. Click **Reserve**.
 4. Confirm with any test card, e.g. `4242 4242 4242 4242`, any future expiry, any 3-digit CVC.
 5. See the confirmation banner, then the booking under **Trips** (you can cancel it there).
-6. Log in as the demo host, click **Switch to hosting**, open **Listings** and create a listing with the **+** button; it appears in search.
+6. Still as the demo guest, open **Trips > Past**: three past stays have **Write a review**.
+7. Log in as the demo host, click **Switch to hosting**, open **Listings** and create a listing with the **+** button (upload a photo or paste a link); it appears in search.
+8. Open the user menu (top right) and switch the theme to **Dark**.
+
+### Bonus features from the brief
+
+| Bonus | Status |
+|---|---|
+| Interactive map with listing pins | Done: search results map with price pins, plus a location map on each listing |
+| Leave a review after a completed stay | Done: `POST /api/bookings/{id}/review`, one review per stay, after checkout |
+| Superhost badges / ratings aggregation | Done: computed Superhost rule, rating averages and six category scores |
+| Image upload to cloud storage | Done: Vercel Blob in production |
+| Dark mode | Done: Light / Dark / System |
+| Responsive design | Done: mobile, tablet and desktop layouts (bottom tab bar and full-screen search on phones) |
 
 ## Features
 
