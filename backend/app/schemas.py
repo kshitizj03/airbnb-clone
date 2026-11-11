@@ -1,7 +1,9 @@
 from datetime import date, datetime
 from typing import Annotated, Generic, Literal, TypeVar
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import (
+    AfterValidator, BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator,
+)
 
 
 class UserOut(BaseModel):
@@ -126,6 +128,20 @@ class ReviewOut(BaseModel):
     created_at: datetime
 
 
+Score = Annotated[int, Field(ge=1, le=5)]
+
+
+class ReviewIn(BaseModel):
+    rating: Score
+    cleanliness: Score
+    accuracy: Score
+    checkin: Score
+    communication: Score
+    location: Score
+    value: Score
+    comment: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
+
+
 class DestinationOut(BaseModel):
     city: str
     state: str
@@ -176,6 +192,7 @@ class BookingOut(BaseModel):
     total: int
     status: str
     created_at: datetime
+    reviewed: bool  # the guest has reviewed this stay
 
 
 def _photo_url(url: str) -> str:

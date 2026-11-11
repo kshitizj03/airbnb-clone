@@ -18,6 +18,9 @@ export function tripTab(b: Booking): TripTab {
 /** The backend refuses to cancel once check-in is today or earlier, so only offer it before then. */
 export const canCancel = (b: Booking): boolean => b.status === "confirmed" && isAfter(parseISO(b.check_in), startOfDay(new Date()));
 
+/** `=== false`, not falsy: an older backend sends no `reviewed`, and then the button stays hidden. */
+export const canReview = (b: Booking): boolean => b.reviewed === false && tripTab(b) === "past";
+
 export const tripGuests = (b: Booking): string => guestSummary({ adults: b.adults, children: b.children, infants: b.infants, pets: b.pets });
 
 const BADGE: Record<TripTab, string> = { upcoming: "Confirmed", past: "Completed", cancelled: "Cancelled" };

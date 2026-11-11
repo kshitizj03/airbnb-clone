@@ -128,6 +128,7 @@ export interface Booking {
   total: number;
   status: string;
   created_at: string;
+  reviewed?: boolean; // missing from an older backend: then no review button
 }
 
 export interface Wishlist {

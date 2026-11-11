@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import { formatDateRange } from "@/lib/format";
 import type { Booking } from "@/lib/types";
-import { ErrorState, LoginState, StatusBadge, tripGuests, tripTab, type TripTab } from "./shared";
+import { canReview, ErrorState, LoginState, StatusBadge, tripGuests, tripTab, type TripTab } from "./shared";
 
 // Leaflet touches `window`, so the map is only ever loaded in the browser.
 const ListingsMap = dynamic(() => import("@/components/map/ListingsMap").then((m) => m.ListingsMap), {
@@ -124,6 +124,7 @@ function TripCard({ trip: b }: { trip: Booking }) {
         <p className="truncate text-secondary">{cardTitle(b.listing)}</p>
         <p className="mt-1">{formatDateRange(parseISO(b.check_in), parseISO(b.check_out))}</p>
         <p className="text-secondary">{tripGuests(b)}</p>
+        {canReview(b) && <p className="mt-1 text-sm font-medium underline">Write a review</p>}
       </div>
     </Link>
   );

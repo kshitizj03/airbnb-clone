@@ -27,8 +27,8 @@ Try it in six steps:
 | Area | What exists |
 |---|---|
 | Search | Location autocomplete, dates, guests, price range, place and property type, bedrooms/beds/bathrooms, amenities, instant book, pets, pagination (18 per page), map of results. Search state lives in the URL, so searches are shareable |
-| Listing page | Photo gallery and modal, amenities, description, reviews with rating breakdown and sorting, map, availability calendar with booked dates blocked, booking card with a live price quote |
-| Booking | Server-computed price breakdown, checkout with a validated (mock) card form, confirmation page, Trips list, cancellation of upcoming stays |
+| Listing page | Photo gallery and modal, amenities, description, reviews with rating breakdown and sorting, map, availability calendar with booked dates blocked, booking card with a live price quote, Superhost badge |
+| Booking | Server-computed price breakdown, checkout with a validated (mock) card form, confirmation page, Trips list, cancellation of upcoming stays, a star-rated review of each completed stay |
 | Wishlists | Heart a listing (creates or picks a wishlist), wishlist pages, remove items, delete lists |
 | Hosting | Dashboard with reservations, own listings, create-listing wizard with photo upload or URL, listing editor, soft delete (refused if upcoming bookings exist) |
 | Auth | Email and password sign-up and login, HttpOnly session cookie, demo buttons |
@@ -224,6 +224,7 @@ All routes are under `/api`; interactive docs are at `<API>/docs`. Errors share 
 | GET | `/api/bookings/me` | user | My trips |
 | GET | `/api/bookings/{id}` | guest or host | One booking |
 | POST | `/api/bookings/{id}/cancel` | guest | Cancel an upcoming booking |
+| POST | `/api/bookings/{id}/review` | guest | Review a completed stay (overall and six category ratings, comment), once |
 | GET | `/api/host/listings` | user | Own listings with upcoming booking counts |
 | GET | `/api/host/reservations` | user | Bookings on own listings, `status=upcoming\|past\|cancelled` |
 | GET | `/api/wishlists` | user | My wishlists with cover and count |
@@ -265,7 +266,7 @@ pip install -r requirements-dev.txt
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-On first start the app creates `app.db` and seeds it automatically when the users table is empty: 78 listings across 13 cities (Goa, Jaipur, Udaipur, Manali, Rishikesh, Mumbai, Bengaluru, Kochi, Pondicherry, Coorg, Shimla, Dubai, Bali), 6 hosts, 4 guests, 29 amenities, past bookings with reviews and future bookings that block dates. The seed is deterministic (`random.Random(42)`). Rebuild it any time with `python -m app.seed --reset`.
+On first start the app creates `app.db` and seeds it automatically when the users table is empty: 78 listings across 13 cities (Goa, Jaipur, Udaipur, Manali, Rishikesh, Mumbai, Bengaluru, Kochi, Pondicherry, Coorg, Shimla, Dubai, Bali), 6 hosts, 4 guests, 29 amenities, past bookings with reviews (the demo guest's three latest stays are left unreviewed, so a review can be written) and future bookings that block dates. The seed is deterministic (`random.Random(42)`). Rebuild it any time with `python -m app.seed --reset`.
 
 ### Frontend
 
@@ -300,7 +301,7 @@ cd backend
 .venv/bin/python -m pytest            # macOS / Linux
 ```
 
-90 tests cover pricing, search filters, auth, bookings, host tools and wishlists. The ones that matter most: double booking under concurrency, back-to-back stays, IST "today", price snapshot, hostile uploads and ownership checks.
+95 tests cover pricing, search filters, auth, bookings, reviews, host tools and wishlists. The ones that matter most: double booking under concurrency, back-to-back stays, IST "today", price snapshot, hostile uploads and ownership checks.
 
 The frontend calendar rules have a small check script: `cd frontend && npm run check:dates` (needs Node 22.18+, which runs TypeScript files directly).
 
@@ -313,7 +314,8 @@ The frontend calendar rules have a small check script: `cd frontend && npm run c
 ## Assumptions
 
 - Payments are mocked: the card form is validated but never sent anywhere. Service fee (14%) and taxes (5%) are mock rates, and prices are in INR.
-- Messaging, Experiences, Services and profile pages are out of scope and show "Coming soon". Identity verification is left out entirely. There is no Superhost computation, and the flexible dates tab is disabled.
+- Messaging, Experiences, Services and profile pages are out of scope and show "Coming soon". Identity verification is left out entirely, and the flexible dates tab is disabled.
+- A host is a Superhost when the average rating across their live listings is at least 4.8 and those listings have at least 10 completed stays (confirmed, checked out by today). It is computed on each request, like ratings.
 - A user becomes a host by creating a listing; there is no separate host sign-up.
 - A booking is confirmed immediately (no host approval step), and only upcoming stays can be cancelled.
 - Listing photos are Unsplash URLs; uploaded photos are stored on the server disk. The API accepts uploads up to 5 MB, but the hosted Vercel proxy limits request bodies to about 4.5 MB, so the UI caps photos at 4 MB. The map uses OpenStreetMap tiles.

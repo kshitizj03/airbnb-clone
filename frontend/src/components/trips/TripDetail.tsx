@@ -14,13 +14,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { api, ApiError } from "@/lib/api";
 import { formatDateRange, formatINR, placeName } from "@/lib/format";
 import type { Booking } from "@/lib/types";
-import { canCancel, ErrorState, LoginState, StatusBadge, tripGuests } from "./shared";
+import { ReviewModal } from "./ReviewModal";
+import { canCancel, canReview, ErrorState, LoginState, StatusBadge, tripGuests } from "./shared";
 
 export function TripDetail({ id }: { id: string }) {
   const { user, isLoading } = useAuth();
   const qc = useQueryClient();
   const isNew = useSearchParams().get("new") === "1";
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const { data: trip, error, refetch } = useQuery({
     queryKey: ["booking", id],
@@ -122,6 +124,11 @@ export function TripDetail({ id }: { id: string }) {
               Cancel reservation
             </Button>
           )}
+          {canReview(trip) && (
+            <Button variant="outline" className="mt-6 w-full" onClick={() => setReviewOpen(true)}>
+              Write a review
+            </Button>
+          )}
         </aside>
       </div>
 
@@ -145,6 +152,7 @@ export function TripDetail({ id }: { id: string }) {
           Cancel your stay at {l.title} ({dates})? The dates will become available to other guests.
         </p>
       </Modal>
+      {reviewOpen && <ReviewModal trip={trip} onClose={() => setReviewOpen(false)} />}
     </div>
   );
 }

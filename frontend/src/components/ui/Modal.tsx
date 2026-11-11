@@ -49,8 +49,8 @@ export function Modal({ open, onClose, title, footer, size = "md", layer = "z-50
     const oldOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    // Move focus inside: first form field if there is one, else the close button.
-    (dialog.querySelector<HTMLElement>("input, select, textarea") ?? dialog.querySelector<HTMLElement>(FOCUSABLE))?.focus();
+    // Move focus inside: a [data-autofocus] element or the first form field if there is one, else the close button.
+    (dialog.querySelector<HTMLElement>("[data-autofocus], input, select, textarea") ?? dialog.querySelector<HTMLElement>(FOCUSABLE))?.focus();
 
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {

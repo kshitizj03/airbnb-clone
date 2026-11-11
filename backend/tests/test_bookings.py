@@ -196,3 +196,52 @@ def test_quote_endpoint_returns_409_when_booked(client, db):
     assert ok.json()["total"] == 8000 + 500 + 1190 + 425
     make_booking(db, listing, guest, d, d + timedelta(days=2))
     _error(client.get(f"/api/listings/{listing.id}/quote", params=params), 409, "dates_unavailable")
+
+
+SCORES = dict(rating=4, cleanliness=5, accuracy=4, checkin=5, communication=5, location=4, value=4)
+
+
+def _past_stay(db, client, **booking_overrides):
+    """A stay that ended today (the earliest day it can be reviewed), guest logged in."""
+    _, guest, listing = _setup(db, client)
+    booking = make_booking(db, listing, guest, today() - timedelta(days=3), today(),
+                           **booking_overrides)
+    return listing, booking
+
+
+def test_review_completed_stay(client, db):
+    listing, booking = _past_stay(db, client)
+    assert client.get(f"/api/bookings/{booking.id}").json()["reviewed"] is False
+    r = client.post(f"/api/bookings/{booking.id}/review", json={**SCORES, "comment": "  Great  "})
+    assert r.status_code == 201, r.text
+    listed = client.get(f"/api/listings/{listing.id}/reviews").json()["items"]
+    assert listed == [r.json()] and r.json()["comment"] == "Great"
+    detail = client.get(f"/api/listings/{listing.id}").json()
+    assert (detail["rating"], detail["review_count"]) == (4, 1)
+    assert client.get(f"/api/bookings/{booking.id}").json()["reviewed"] is True
+    assert client.get("/api/bookings/me").json()[0]["reviewed"] is True
+    again = client.post(f"/api/bookings/{booking.id}/review", json={**SCORES, "comment": "Again"})
+    _error(again, 409, "already_reviewed")
+
+
+def test_review_rules(client, db):
+    listing, booking = _past_stay(db, client, status="cancelled")
+    body = {**SCORES, "comment": "Nice"}
+    _error(client.post(f"/api/bookings/{booking.id}/review", json=body), 409, "booking_cancelled")
+    guest = booking.guest
+    ongoing = make_booking(db, listing, guest, today() - timedelta(days=1), today() + timedelta(days=1))
+    _error(client.post(f"/api/bookings/{ongoing.id}/review", json=body), 409, "stay_not_finished")
+    _error(client.post("/api/bookings/999/review", json=body), 404, "booking_not_found")
+    _login(client, "h@x.com")  # even the host cannot review the guest's stay
+    _error(client.post(f"/api/bookings/{ongoing.id}/review", json=body), 404, "booking_not_found")
+
+
+def test_review_validation_and_login(client, db):
+    _, booking = _past_stay(db, client)
+    path = f"/api/bookings/{booking.id}/review"
+    _error(client.post(path, json={**SCORES, "comment": "   "}), 422, "validation_error")
+    _error(client.post(path, json={**SCORES, "comment": "x" * 1001}), 422, "validation_error")
+    _error(client.post(path, json={**SCORES, "value": 6, "comment": "Hi"}), 422, "validation_error")
+    _error(client.post(path, json={"rating": 5, "comment": "Hi"}), 422, "validation_error")
+    client.post("/api/auth/logout")
+    _error(client.post(path, json={**SCORES, "comment": "Hi"}), 401, "not_authenticated")

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import clock
@@ -7,17 +8,17 @@ from app.availability import has_overlap
 from app.cards import rated_listings, to_card
 from app.db import get_db
 from app.errors import AppError
-from app.models import Booking, Listing, User
+from app.models import Booking, Listing, Review, User
 from app.pricing import quote, validate_stay
-from app.routers.listings import get_live_listing
-from app.schemas import BookingIn, BookingOut, ListingCard
+from app.routers.listings import get_live_listing, review_out
+from app.schemas import BookingIn, BookingOut, ListingCard, ReviewIn, ReviewOut
 from app.security import current_user
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 
 
-def _out(booking: Booking, card: ListingCard) -> BookingOut:
-    return BookingOut(listing=card, **{f: getattr(booking, f) for f in (
+def _out(booking: Booking, card: ListingCard, reviewed: bool = False) -> BookingOut:
+    return BookingOut(listing=card, reviewed=reviewed, **{f: getattr(booking, f) for f in (
         "id", "check_in", "check_out", "adults", "children", "infants", "pets", "nights",
         "nightly_price", "cleaning_fee", "service_fee", "taxes", "total", "status", "created_at")})
 
@@ -27,6 +28,11 @@ def _cards(db: Session, listing_ids: set[int]) -> dict[int, ListingCard]:
     guest's past trip still renders."""
     rows = db.execute(rated_listings(include_deleted=True).where(Listing.id.in_(listing_ids)))
     return {listing.id: to_card(listing, rating, n) for listing, rating, n in rows}
+
+
+def _reviewed(db: Session, booking_ids: list[int]) -> set[int]:
+    """Which of these bookings have a review, in one query."""
+    return set(db.scalars(select(Review.booking_id).where(Review.booking_id.in_(booking_ids))))
 
 
 def _get_booking(db: Session, booking_id: int, user: User, guest_only: bool) -> Booking:
@@ -66,14 +72,16 @@ def my_trips(db: Session = Depends(get_db), user: User = Depends(current_user)):
     bookings = db.scalars(select(Booking).where(Booking.guest_id == user.id)
                           .order_by(Booking.check_in.desc(), Booking.id.desc())).all()
     cards = _cards(db, {b.listing_id for b in bookings})
-    return [_out(b, cards[b.listing_id]) for b in bookings]
+    reviewed = _reviewed(db, [b.id for b in bookings])
+    return [_out(b, cards[b.listing_id], b.id in reviewed) for b in bookings]
 
 
 @router.get("/{booking_id}", response_model=BookingOut)
 def get_booking(booking_id: int, db: Session = Depends(get_db),
                 user: User = Depends(current_user)):
     booking = _get_booking(db, booking_id, user, guest_only=False)
-    return _out(booking, _cards(db, {booking.listing_id})[booking.listing_id])
+    return _out(booking, _cards(db, {booking.listing_id})[booking.listing_id],
+                booking.id in _reviewed(db, [booking.id]))
 
 
 @router.post("/{booking_id}/cancel", response_model=BookingOut)
@@ -87,3 +95,22 @@ def cancel_booking(booking_id: int, db: Session = Depends(get_db),
     booking.status = "cancelled"
     db.commit()
     return _out(booking, _cards(db, {booking.listing_id})[booking.listing_id])
+
+
+@router.post("/{booking_id}/review", response_model=ReviewOut, status_code=201)
+def review_stay(booking_id: int, body: ReviewIn, db: Session = Depends(get_db),
+                user: User = Depends(current_user)):
+    booking = _get_booking(db, booking_id, user, guest_only=True)
+    if booking.status == "cancelled":
+        raise AppError(409, "booking_cancelled", "A cancelled booking cannot be reviewed.")
+    if booking.check_out > clock.today():
+        raise AppError(409, "stay_not_finished", "You can review this stay after checkout.")
+    review = Review(booking_id=booking.id, listing_id=booking.listing_id, author_id=user.id,
+                    **body.model_dump())
+    db.add(review)
+    try:
+        db.commit()
+    except IntegrityError:  # reviews.booking_id is unique: the database is the one check
+        db.rollback()
+        raise AppError(409, "already_reviewed", "You have already reviewed this stay.")
+    return review_out(review)
