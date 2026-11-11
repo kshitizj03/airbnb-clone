@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 interface ModalProps {
@@ -24,6 +24,12 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function Modal({ open, onClose, title, footer, size = "md", children }: ModalProps) {
+  // false on the server and during hydration, true after: document.body does not exist before that.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   // Keep the latest onClose without re-running the effect (which would steal focus).
@@ -33,7 +39,7 @@ export function Modal({ open, onClose, title, footer, size = "md", children }: M
   });
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !mounted) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const dialog = dialogRef.current!;
 
@@ -71,9 +77,9 @@ export function Modal({ open, onClose, title, footer, size = "md", children }: M
       document.body.style.overflow = oldOverflow;
       previouslyFocused?.focus();
     };
-  }, [open]);
+  }, [open, mounted]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   // Portal to <body>: a modal opened from inside the fixed header would otherwise be trapped under its z-index.
   return createPortal(

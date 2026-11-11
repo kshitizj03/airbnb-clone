@@ -16,6 +16,10 @@ interface GuestPickerProps {
 export function GuestPicker({ value, onChange, maxGuests, petsAllowed = true }: GuestPickerProps) {
   const { adults, children, infants, pets } = value;
   const atMax = maxGuests !== undefined && adults + children >= maxGuests;
+  // Adding a child with 0 adults also adds an adult, so it takes two seats.
+  const childBlocked = maxGuests !== undefined && adults + children + (adults === 0 ? 2 : 1) > maxGuests;
+  // An infant with 0 adults adds one adult seat.
+  const infantBlocked = maxGuests !== undefined && adults === 0 && maxGuests < 1;
   const hasDependents = children + infants > 0;
 
   // A child or infant needs an adult: adding one with 0 adults sets adults to 1.
@@ -34,10 +38,10 @@ export function GuestPicker({ value, onChange, maxGuests, petsAllowed = true }: 
         />
       </Row>
       <Row title="Children" subtitle="Ages 2–12">
-        <Stepper label="children" value={children} max={atMax ? children : undefined} onChange={(n) => addDependent("children", n)} />
+        <Stepper label="children" value={children} max={childBlocked ? children : undefined} onChange={(n) => addDependent("children", n)} />
       </Row>
       <Row title="Infants" subtitle="Under 2">
-        <Stepper label="infants" value={infants} max={5} onChange={(n) => addDependent("infants", n)} />
+        <Stepper label="infants" value={infants} max={infantBlocked ? infants : 5} onChange={(n) => addDependent("infants", n)} />
       </Row>
       <Row
         title="Pets"

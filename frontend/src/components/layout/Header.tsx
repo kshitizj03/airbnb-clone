@@ -68,10 +68,10 @@ export function Header() {
   const compact = (!onHome || scrolled) && expanded === null;
 
   // The header is fixed so it can change height without moving the page; this spacer reserves its resting height.
-  const spacer = logoOnly ? "md:h-[81px]" : onHome ? "md:h-[179px]" : "md:h-[81px]";
+  const spacer = logoOnly ? "h-[81px]" : `h-[73px] ${onHome ? "md:h-[179px]" : "md:h-[81px]"}`;
 
   return (
-    <div className={`h-[73px] ${spacer}`}>
+    <div className={spacer}>
       <header className={`fixed inset-x-0 top-0 z-40 border-b bg-white ${compact || logoOnly ? "border-bebe" : "border-transparent"}`}>
         {logoOnly ? (
           <div className="flex h-20 items-center px-4 md:px-12">
