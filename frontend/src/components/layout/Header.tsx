@@ -70,8 +70,10 @@ export function Header() {
   // The header is fixed so it can change height without moving the page; this spacer reserves its resting height.
   const spacer = logoOnly ? "h-[81px]" : `h-[73px] ${onHome ? "md:h-[179px]" : "md:h-[81px]"}`;
 
+  // Phones show the listing photo edge to edge, with its own back button instead of the header.
+  const onRoom = pathname.startsWith("/rooms/");
   return (
-    <div className={spacer}>
+    <div className={`${spacer} ${onRoom ? "max-md:hidden" : ""}`}>
       <header className={`fixed inset-x-0 top-0 z-40 border-b bg-white ${compact || logoOnly ? "border-bebe" : "border-transparent"}`}>
         {logoOnly ? (
           <div className="flex h-20 items-center px-4 md:px-12">

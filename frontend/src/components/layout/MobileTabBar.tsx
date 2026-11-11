@@ -31,6 +31,8 @@ export function MobileTabBar() {
         { label: "Log in", Icon: UserIcon },
       ];
 
+  if (pathname.startsWith("/rooms/")) return null; // the booking bar takes the bottom of the screen
+
   return (
     <nav
       aria-label="Main"
