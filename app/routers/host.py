@@ -9,7 +9,7 @@ from app.cards import rated_listings, to_card
 from app.db import get_db
 from app.errors import AppError
 from app.models import Booking, Listing, User
-from app.routers.bookings import _cards, _out
+from app.routers.bookings import _cards, _out, _reviewed
 from app.schemas import BookingOut, GuestOut, HostListingCard
 from app.security import current_user
 
@@ -56,9 +56,10 @@ def reservations(status: Literal["upcoming", "past", "cancelled"] = "upcoming",
         query = query.order_by(Booking.check_in.desc(), Booking.id.desc())
     bookings = db.scalars(query).all()
     cards = _cards(db, {b.listing_id for b in bookings})
+    reviewed = _reviewed(db, [b.id for b in bookings])
     result = []
     for b in bookings:
-        out = _out(b, cards[b.listing_id])
+        out = _out(b, cards[b.listing_id], b.id in reviewed)
         out.guest = GuestOut(name=b.guest.name, avatar_url=b.guest.avatar_url)
         result.append(out)
     return result

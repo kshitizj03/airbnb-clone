@@ -89,6 +89,7 @@ def seed(db: Session) -> None:
     db.add_all(listings)
 
     # Past stays walk backwards from today with gaps, so a listing's stays never overlap.
+    reviews = []
     for listing in listings:
         end = now - timedelta(days=rng.randint(3, 20))
         p_five = rng.choices([0.98, 0.85, 0.65], weights=[45, 40, 15])[0]  # listing quality tier
@@ -96,8 +97,16 @@ def seed(db: Session) -> None:
             nights = rng.randint(2, 5)
             booking = _booking(listing, rng.choice(guests), end - timedelta(days=nights), nights, rng)
             db.add(booking)
-            db.add(_review(booking, p_five, rng))
+            reviews.append(_review(booking, p_five, rng))
+            db.add(reviews[-1])
             end -= timedelta(days=nights + rng.randint(2, 15))
+
+    # The demo guest's three latest past stays get no review, so writing one can be tried.
+    demo_reviews = sorted((r for r in reviews if r.author is guests[0]),
+                          key=lambda r: r.booking.check_out)
+    for review in demo_reviews[-3:]:
+        review.listing.reviews.remove(review)  # else the listing would save it again
+        db.expunge(review)
 
     # Future stays on distinct listings (one each), so they cannot overlap either.
     for listing in rng.sample(listings, N_FUTURE_BOOKINGS):

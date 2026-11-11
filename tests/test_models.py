@@ -63,6 +63,11 @@ def test_seed_is_deterministic_and_complete(db):
     assert db.scalar(select(func.count(User.id))) == 10
     assert all(len(listing.photos) == 5 for listing in db.scalars(select(Listing)))
     assert db.scalar(select(func.count(Booking.id)).where(Booking.check_in > today())) >= 15
+    unreviewed = (select(func.count(Booking.id)).join(User, User.id == Booking.guest_id)
+                  .outerjoin(Review, Review.booking_id == Booking.id)
+                  .where(User.email == "demo.guest@airbnb-clone.test", Review.id.is_(None),
+                         Booking.check_out <= today()))
+    assert db.scalar(unreviewed) == 3  # past stays the demo guest can still review
     seed(db)  # second call is a no-op
     assert db.scalar(select(func.count(User.id))) == 10
 

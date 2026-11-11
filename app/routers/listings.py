@@ -267,6 +267,12 @@ def price_quote(
     return quote(listing.price_per_night, listing.cleaning_fee, check_in, check_out)
 
 
+def review_out(r: Review) -> ReviewOut:
+    return ReviewOut(id=r.id, author_name=r.author.name, author_avatar_url=r.author.avatar_url,
+                     author_joined_year=r.author.created_at.year, rating=r.rating,
+                     comment=r.comment, created_at=r.created_at)
+
+
 @router.get("/{listing_id}/reviews", response_model=Page[ReviewOut])
 def reviews(
     listing_id: int,
@@ -286,8 +292,5 @@ def reviews(
         .options(joinedload(Review.author))
         .order_by(*order).limit(REVIEWS_PAGE_SIZE).offset((page - 1) * REVIEWS_PAGE_SIZE)
     ).all()
-    items = [ReviewOut(id=r.id, author_name=r.author.name, author_avatar_url=r.author.avatar_url,
-                       author_joined_year=r.author.created_at.year, rating=r.rating,
-                       comment=r.comment, created_at=r.created_at) for r in rows]
-    return Page(items=items, total=total, page=page, page_size=REVIEWS_PAGE_SIZE,
+    return Page(items=[review_out(r) for r in rows], total=total, page=page, page_size=REVIEWS_PAGE_SIZE,
                 pages=math.ceil(total / REVIEWS_PAGE_SIZE))
