@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.engine import make_url
 
@@ -41,6 +42,10 @@ def create_app(init_db: bool = True) -> FastAPI:
     upload_dir = Path(get_settings().upload_dir)
     upload_dir.mkdir(parents=True, exist_ok=True)  # StaticFiles refuses a missing directory
     app.mount("/uploads", StaticFiles(directory=upload_dir), name="uploads")
+
+    @app.get("/", include_in_schema=False)
+    def root():
+        return RedirectResponse("/docs")  # the bare API URL opens the interactive docs
 
     @app.get("/api/health")
     def health():

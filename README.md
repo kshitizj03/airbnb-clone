@@ -7,7 +7,7 @@ The UI look and copy mirror Airbnb on purpose, because the assignment grades sim
 ## Live demo
 
 - App: https://airbnb-clone-kshitiz.vercel.app
-- API: https://stayhub-api-kj-g3amd8gmg4gydhdp.centralindia-01.azurewebsites.net (interactive docs at `/docs`)
+- API docs (Swagger): https://stayhub-api-kj-g3amd8gmg4gydhdp.centralindia-01.azurewebsites.net/docs
 
 No sign-up needed: the login modal has **Continue as demo guest** and **Continue as demo host** buttons (`demo.guest@airbnb-clone.test` and `demo.host@airbnb-clone.test`). Normal sign-up and login also work.
 
