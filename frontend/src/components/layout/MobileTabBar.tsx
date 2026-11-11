@@ -31,7 +31,7 @@ export function MobileTabBar() {
         { label: "Log in", Icon: UserIcon },
       ];
 
-  if (pathname.startsWith("/rooms/")) return null; // the booking bar takes the bottom of the screen
+  if (pathname.startsWith("/rooms/") || pathname.startsWith("/book/")) return null; // the booking bar / checkout take the bottom of the screen
 
   return (
     <nav
