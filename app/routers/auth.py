@@ -43,7 +43,7 @@ def login(body: LoginIn, response: Response, db: Session = Depends(get_db)):
 
 @router.post("/demo", response_model=UserOut)
 def demo(body: DemoIn, response: Response, db: Session = Depends(get_db)):
-    user = _by_email(db, f"demo.{body.role}@stayhub.test")
+    user = _by_email(db, f"demo.{body.role}@airbnb-clone.test")
     if not user:
         raise AppError(404, "demo_unavailable", "Demo accounts are not set up.")
     issue_cookie(response, user.id)

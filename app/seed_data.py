@@ -35,18 +35,18 @@ AMENITIES = [
 
 # (host name, email); the first host and first guest are the demo accounts.
 HOSTS = [
-    ("Rohan Mehta", "demo.host@stayhub.test"),
-    ("Ananya Iyer", "ananya.iyer@stayhub.test"),
-    ("Vikram Singh Rathore", "vikram.rathore@stayhub.test"),
-    ("Meera Nair", "meera.nair@stayhub.test"),
-    ("Arjun Kapoor", "arjun.kapoor@stayhub.test"),
-    ("Kavya Reddy", "kavya.reddy@stayhub.test"),
+    ("Rohan Mehta", "demo.host@airbnb-clone.test"),
+    ("Ananya Iyer", "ananya.iyer@airbnb-clone.test"),
+    ("Vikram Singh Rathore", "vikram.rathore@airbnb-clone.test"),
+    ("Meera Nair", "meera.nair@airbnb-clone.test"),
+    ("Arjun Kapoor", "arjun.kapoor@airbnb-clone.test"),
+    ("Kavya Reddy", "kavya.reddy@airbnb-clone.test"),
 ]
 GUESTS = [
-    ("Priya Sharma", "demo.guest@stayhub.test"),
-    ("Aditya Verma", "aditya.verma@stayhub.test"),
-    ("Sneha Kulkarni", "sneha.kulkarni@stayhub.test"),
-    ("Imran Qureshi", "imran.qureshi@stayhub.test"),
+    ("Priya Sharma", "demo.guest@airbnb-clone.test"),
+    ("Aditya Verma", "aditya.verma@airbnb-clone.test"),
+    ("Sneha Kulkarni", "sneha.kulkarni@airbnb-clone.test"),
+    ("Imran Qureshi", "imran.qureshi@airbnb-clone.test"),
 ]
 
 # city: (state, country, lat, lng, price band low, price band high, localities,
