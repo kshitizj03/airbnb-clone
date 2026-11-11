@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.engine import make_url
 
 from app import models  # noqa: F401  (registers tables on Base)
 from app.config import get_settings
@@ -18,6 +19,9 @@ def create_app(init_db: bool = True) -> FastAPI:
     async def lifespan(_app: FastAPI):
         if init_db:
             # On Render the disk is only mounted at runtime, so build and seed on startup.
+            db_file = make_url(get_settings().database_url).database
+            if db_file:  # the disk is empty on first boot, so its folder may not exist yet
+                Path(db_file).parent.mkdir(parents=True, exist_ok=True)
             Base.metadata.create_all(engine)
             with SessionLocal() as db:
                 seed(db)
