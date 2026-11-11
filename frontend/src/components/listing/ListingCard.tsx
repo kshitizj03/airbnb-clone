@@ -70,7 +70,7 @@ export function ListingCard({ listing: l, variant, onHover, href = `/rooms/${l.i
         <HeartButton listing={l} />
       </div>
       <div className="relative mt-3">
-      <div className="mt-3 flex items-baseline justify-between gap-2 text-card">
+      <div className="flex items-baseline justify-between gap-2 text-card">
         <Link href={href} className={`truncate ${link}`}>
           {cardTitle(l)}
         </Link>

@@ -213,3 +213,41 @@ body {
   outline: 2px solid #222222;
   outline-offset: 2px;
 }
+
+/* Map price pills (components/map/ListingsMap.tsx). The pin's anchor is the pill's centre. */
+.price-pin {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  padding: 6px 10px;
+  border-radius: 28px;
+  background: #fff;
+  color: #222;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transition: transform 150ms, background 150ms;
+}
+.price-pin:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+.price-pin-hot {
+  background: #222;
+  color: #fff;
+  transform: translate(-50%, -50%) scale(1.12);
+}
+.leaflet-container {
+  font-family: inherit;
+}
+.leaflet-tile-pane {
+  filter: grayscale(0.75) brightness(1.06) contrast(0.92);
+}
+
+/* Two-thumb price slider: two range inputs stacked; only the thumbs take the mouse. */
+.dual-range input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; appearance: none; background: transparent; pointer-events: none; }
+.dual-range input[type="range"]::-webkit-slider-thumb { appearance: none; pointer-events: auto; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 1px solid #b0b0b0; box-shadow: 0 1px 3px rgba(0,0,0,.2); cursor: grab; }
+.dual-range input[type="range"]::-moz-range-thumb { pointer-events: auto; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 1px solid #b0b0b0; box-shadow: 0 1px 3px rgba(0,0,0,.2); cursor: grab; }
+.dual-range input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid #222; }
