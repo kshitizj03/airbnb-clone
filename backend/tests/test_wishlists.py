@@ -118,3 +118,23 @@ def test_delete_wishlist_and_requires_login(client, db):
     assert client.get("/api/wishlists").json() == []
     client.post("/api/auth/logout")
     assert client.get("/api/wishlists").status_code == 401
+
+
+def test_saved_map_skips_deleted_listings(client, db):
+    a, b = _setup(db, client)
+    w = client.post("/api/wishlists", json={"name": "L", "listing_id": a.id}).json()
+    client.post(f"/api/wishlists/{w['id']}/items", json={"listing_id": b.id})
+    b.deleted_at = datetime.now()
+    db.commit()
+    assert client.get("/api/wishlists/saved").json() == {str(a.id): w["id"]}
+
+
+def test_save_race_is_idempotent(client, db, monkeypatch):
+    a, _ = _setup(db, client)
+    w = client.post("/api/wishlists", json={"name": "L", "listing_id": a.id}).json()
+    # Simulate a double-clicked heart: the pre-check misses, so the primary key must catch it.
+    monkeypatch.setattr("app.routers.wishlists._is_saved", lambda db, wishlist_id, listing_id: False)
+    r = client.post(f"/api/wishlists/{w['id']}/items", json={"listing_id": a.id})
+    assert r.status_code == 200, r.text
+    assert r.json()["count"] == 1
+    assert db.scalar(select(func.count()).select_from(WishlistItem)) == 1
