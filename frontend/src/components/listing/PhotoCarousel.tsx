@@ -15,7 +15,7 @@ export function PhotoCarousel({ photos, alt, href }: { photos: string[]; alt: st
   }
 
   const arrow =
-    "absolute top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 opacity-0 shadow-elevation1 transition hover:scale-105 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 disabled:hidden! [@media(hover:none)]:pointer-events-none";
+    "absolute top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-elevated/90 opacity-0 shadow-elevation1 transition hover:scale-105 hover:bg-elevated group-focus-within:opacity-100 group-hover:opacity-100 disabled:hidden! [@media(hover:none)]:pointer-events-none";
 
   return (
     <div className="relative size-full overflow-hidden">

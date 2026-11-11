@@ -64,7 +64,7 @@ export function TripsPage() {
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              className={`rounded-pill border px-4 py-2 text-sm font-medium ${tab === t.id ? "border-hof bg-hof text-white" : "border-deco hover:border-hof"}`}
+              className={`rounded-pill border px-4 py-2 text-sm font-medium ${tab === t.id ? "border-hof bg-hof text-on-hof" : "border-deco hover:border-hof"}`}
             >
               {t.label}
             </button>

@@ -34,7 +34,7 @@ export function MeetHost({ host }: { host: Host }) {
     <section id="host" className="border-b border-bebe py-8">
       <h2 className="text-section">Meet your host</h2>
       <div className="mt-6 grid gap-10 md:grid-cols-2">
-        <div className="flex items-center justify-between gap-6 rounded-32 bg-white p-6 shadow-secondary md:p-8">
+        <div className="flex items-center justify-between gap-6 rounded-32 bg-elevated p-6 shadow-secondary md:p-8">
           <div className="flex flex-col items-center text-center">
             <Avatar name={host.name} src={host.avatar_url} size={104} />
             <p className="mt-3 text-[32px] leading-9 font-semibold">{host.name}</p>

@@ -149,7 +149,7 @@ export function FiltersModal({ search, onClose, onApply }: Props) {
         onClick={() => onChange(!on)}
         className={`relative h-8 w-12 rounded-pill transition-colors ${on ? "bg-hof" : "bg-secondary/60"}`}
       >
-        <span className={`absolute top-1 size-6 rounded-full bg-white transition-all ${on ? "left-5" : "left-1"}`} />
+        <span className={`absolute top-1 size-6 rounded-full bg-surface transition-all ${on ? "left-5" : "left-1"}`} />
       </button>
     </div>
   );
@@ -165,7 +165,7 @@ export function FiltersModal({ search, onClose, onApply }: Props) {
           <button type="button" onClick={() => setDraft(NO_FILTERS)} className="rounded-8 px-2 py-2 text-base font-medium underline hover:bg-faint">
             Clear all
           </button>
-          <button type="button" onClick={() => onApply(draft)} className="h-12 rounded-8 bg-hof px-6 text-button text-white hover:bg-black">
+          <button type="button" onClick={() => onApply(draft)} className="h-12 rounded-8 bg-hof px-6 text-button text-on-hof hover:bg-hof-hover">
             {count === undefined ? "Show places" : `Show ${count} ${count === 1 ? "place" : "places"}`}
           </button>
         </div>
@@ -180,7 +180,7 @@ export function FiltersModal({ search, onClose, onApply }: Props) {
                 type="button"
                 aria-pressed={draft.placeType === value}
                 onClick={() => set({ placeType: value })}
-                className={`flex-1 rounded-8 py-3 text-base ${draft.placeType === value ? "bg-hof font-medium text-white" : "hover:bg-faint"}`}
+                className={`flex-1 rounded-8 py-3 text-base ${draft.placeType === value ? "bg-hof font-medium text-on-hof" : "hover:bg-faint"}`}
               >
                 {label}
               </button>

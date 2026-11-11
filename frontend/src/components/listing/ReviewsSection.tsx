@@ -158,7 +158,7 @@ export function ReviewsModal({ listing, focusId, onClose }: { listing: ListingDe
             aria-label="Sort reviews"
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
-            className="h-10 rounded-pill border border-deco bg-white px-4 text-sm font-medium"
+            className="h-10 rounded-pill border border-deco bg-surface px-4 text-sm font-medium"
           >
             {SORTS.map(([v, label]) => (
               <option key={v} value={v}>

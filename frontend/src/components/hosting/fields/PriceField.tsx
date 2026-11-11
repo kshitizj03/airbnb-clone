@@ -25,7 +25,7 @@ function Toggle({ label, hint, on, onClick }: { label: string; hint: string; on:
         onClick={onClick}
         className={`relative h-8 w-12 shrink-0 rounded-pill transition-colors ${on ? "bg-hof" : "bg-disabled"}`}
       >
-        <span className={`absolute top-1 left-1 size-6 rounded-full bg-white transition-transform ${on ? "translate-x-4" : ""}`} />
+        <span className={`absolute top-1 left-1 size-6 rounded-full bg-surface transition-transform ${on ? "translate-x-4" : ""}`} />
       </button>
     </div>
   );

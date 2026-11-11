@@ -55,7 +55,7 @@ export function ListingPage({ id }: { id: string }) {
       <div className="flex flex-col items-center gap-3 px-6 py-24 text-center">
         <p className="text-section">Something went wrong</p>
         <p className="text-secondary">We could not load this place. Please try again.</p>
-        <button type="button" onClick={() => refetch()} className="mt-2 h-12 rounded-8 bg-hof px-6 text-button text-white hover:bg-black">
+        <button type="button" onClick={() => refetch()} className="mt-2 h-12 rounded-8 bg-hof px-6 text-button text-on-hof hover:bg-hof-hover">
           Try again
         </button>
       </div>
@@ -119,7 +119,7 @@ function Listing({ listing }: { listing: ListingDetail }) {
       <title>{`${listing.title} - Airbnb clone`}</title>
 
       {heroGone && (
-        <div className="fixed inset-x-0 top-[81px] z-30 hidden border-b border-bebe bg-white md:block">
+        <div className="fixed inset-x-0 top-[81px] z-30 hidden border-b border-bebe bg-surface md:block">
           <div className="mx-auto flex h-20 max-w-[1280px] items-center justify-between px-10 xl:px-20">
             <nav aria-label="Sections" className="flex gap-6 text-sm font-medium">
               {[["photos", "Photos"], ["amenities", "Amenities"], ["reviews", "Reviews"], ["location", "Location"]].map(([hash, label]) => (

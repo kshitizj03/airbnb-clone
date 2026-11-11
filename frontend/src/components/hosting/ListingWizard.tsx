@@ -248,11 +248,11 @@ export function ListingWizard() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface">
       {topBar}
       <div className="flex-1 overflow-y-auto">{body}</div>
 
-      <footer className="shrink-0 border-t border-bebe bg-white">
+      <footer className="shrink-0 border-t border-bebe bg-surface">
         <div className="flex gap-2 px-6 md:px-12" role="progressbar" aria-label="Your progress" aria-valuemin={1} aria-valuemax={STEPS.length} aria-valuenow={step + 1}>
           {PHASES.map(([from, to], i) => {
             const fill = last ? 1 : Math.min(1, Math.max(0, (step - from) / (to - from + 1)));

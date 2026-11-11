@@ -54,7 +54,7 @@ export function PhotosField({ value, onChange, error }: Props) {
     onChange(next);
   };
 
-  const iconBtn = "flex size-8 items-center justify-center rounded-full bg-white shadow-elevation1 hover:bg-faint disabled:opacity-40 disabled:hover:bg-white";
+  const iconBtn = "flex size-8 items-center justify-center rounded-full bg-elevated shadow-elevation1 hover:bg-faint disabled:opacity-40 disabled:hover:bg-elevated";
 
   return (
     <div>
@@ -98,7 +98,7 @@ export function PhotosField({ value, onChange, error }: Props) {
           <li key={src} className={`relative overflow-hidden rounded-12 bg-bebe ${i === 0 ? "col-span-2 aspect-[16/9]" : "aspect-[4/3]"}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={`Photo ${i + 1}`} className="size-full object-cover" />
-            {i === 0 && <span className="absolute top-3 left-3 rounded-pill bg-white px-3 py-1 text-label shadow-elevation1">Cover Photo</span>}
+            {i === 0 && <span className="absolute top-3 left-3 rounded-pill bg-elevated px-3 py-1 text-label shadow-elevation1">Cover Photo</span>}
             <div className="absolute right-3 bottom-3 flex gap-2">
               <button type="button" aria-label={`Move photo ${i + 1} up`} disabled={i === 0} onClick={() => move(i, -1)} className={iconBtn}>
                 <ArrowUp size={16} />

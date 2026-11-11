@@ -55,7 +55,7 @@ export function HostListingsPage() {
               <div className="relative aspect-square overflow-hidden rounded-16 bg-bebe">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={l.photos[0]} alt="" loading="lazy" className="size-full object-cover" />
-                <span className="absolute top-3 left-3 flex items-center gap-1.5 rounded-pill bg-white px-2.5 py-1 text-label shadow-elevation1">
+                <span className="absolute top-3 left-3 flex items-center gap-1.5 rounded-pill bg-elevated px-2.5 py-1 text-label shadow-elevation1">
                   <span className="size-2 rounded-full bg-spruce" aria-hidden /> Listed
                 </span>
               </div>

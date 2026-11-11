@@ -15,7 +15,7 @@ export function PhotoMosaic({ listing, onShare }: { listing: ListingDetail; onSh
   const [index, setIndex] = useState(0);
   const photos = listing.photos;
   const saved = savedMap[listing.id] !== undefined;
-  const round = "flex size-8 items-center justify-center rounded-full bg-white shadow-elevation1";
+  const round = "flex size-8 items-center justify-center rounded-full bg-elevated shadow-elevation1";
 
   return (
     <>
@@ -36,7 +36,7 @@ export function PhotoMosaic({ listing, onShare }: { listing: ListingDetail; onSh
         <button
           type="button"
           onClick={() => openModal("photos")}
-          className="absolute right-6 bottom-6 flex items-center gap-2 rounded-8 border border-hof bg-white px-3 py-1.5 text-sm font-medium hover:bg-faint"
+          className="absolute right-6 bottom-6 flex items-center gap-2 rounded-8 border border-hof bg-elevated px-3 py-1.5 text-sm font-medium hover:bg-faint"
         >
           <Grip size={16} /> Show all photos
         </button>
@@ -55,7 +55,7 @@ export function PhotoMosaic({ listing, onShare }: { listing: ListingDetail; onSh
             </button>
           ))}
         </div>
-        <div className="pointer-events-none absolute right-4 bottom-4 rounded-8 bg-hof/80 px-2 py-1 text-xs font-medium text-white">
+        <div className="pointer-events-none absolute right-4 bottom-4 rounded-8 bg-[#222222]/80 px-2 py-1 text-xs font-medium text-white">
           {index + 1} / {photos.length}
         </div>
         <button type="button" aria-label="Back" onClick={() => router.back()} className={`${round} absolute top-4 left-4`}>

@@ -42,7 +42,7 @@ export function CalendarPanel({ range, booked, months, city, onChange, onClose }
           Clear dates
         </button>
         {onClose && (
-          <button type="button" onClick={onClose} className="rounded-8 bg-hof px-4 py-2 text-sm font-medium text-white hover:bg-black">
+          <button type="button" onClick={onClose} className="rounded-8 bg-hof px-4 py-2 text-sm font-medium text-on-hof hover:bg-hof-hover">
             Close
           </button>
         )}

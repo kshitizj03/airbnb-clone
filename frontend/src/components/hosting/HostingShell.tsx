@@ -40,7 +40,7 @@ export function HostingShell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <header className="border-b border-bebe bg-white">
+      <header className="border-b border-bebe bg-surface">
         <div className="flex h-20 items-center justify-between px-4 md:px-12">
           <Link href="/" aria-label="Airbnb home" className="flex flex-1 items-center gap-1">
             <Logo className="size-8" />

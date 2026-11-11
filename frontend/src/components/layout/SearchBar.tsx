@@ -63,7 +63,7 @@ export function SearchBar({ initialActive = null, onDismiss }: SearchBarProps) {
     <div ref={ref} className="relative mx-auto w-[850px] max-w-full">
       <div
         className={`flex h-[66px] items-center rounded-pill border border-deco shadow-elevation3 ${
-          barActive ? "bg-bebe" : "bg-white"
+          barActive ? "bg-bebe" : "bg-elevated"
         }`}
       >
         <Cell
@@ -176,7 +176,7 @@ function Cell({
   clear?: ReactNode;
   children: ReactNode;
 }) {
-  const state = on ? "z-10 bg-white shadow-primary" : barActive ? "hover:bg-[#dddddd]" : "hover:bg-bebe";
+  const state = on ? "z-10 bg-raised shadow-primary" : barActive ? "hover:bg-deco" : "hover:bg-bebe";
   return (
     <div className={`relative flex h-full items-center rounded-pill transition-colors ${grow} ${state}`}>
       <span className={`absolute top-4 bottom-4 left-0 w-px bg-deco ${hideDivider ? "invisible" : ""}`} />
@@ -227,7 +227,7 @@ function ClearButton({ label, onClick }: { label: string; onClick: () => void })
 
 function Panel({ className, children }: { className: string; children: ReactNode }) {
   return (
-    <div className={`animate-fade-in absolute top-[74px] z-20 rounded-32 bg-white shadow-primary ${className}`}>
+    <div className={`animate-fade-in absolute top-[74px] z-20 rounded-32 bg-elevated shadow-primary ${className}`}>
       {children}
     </div>
   );
@@ -241,7 +241,7 @@ export function CompactSearch({ onExpand }: { onExpand: (segment: Segment) => vo
   const part = "h-full px-4 text-tab";
 
   return (
-    <div className="flex h-12 items-center rounded-pill border border-deco bg-white pl-2 shadow-elevation2 hover:shadow-elevation3">
+    <div className="flex h-12 items-center rounded-pill border border-deco bg-elevated pl-2 shadow-elevation2 hover:shadow-elevation3">
       {!s.location && <House size={18} strokeWidth={1.5} className="ml-2" />}
       <button type="button" className={part} onClick={() => onExpand("where")}>
         {s.location ? `Homes in ${s.location}` : "Anywhere"}

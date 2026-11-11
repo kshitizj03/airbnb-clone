@@ -24,6 +24,14 @@
   --color-spruce-text: #038026;
   --color-discount: #e6f6e9;
   --color-legal: #0d4daa;
+  /* Light values equal the hardcoded colours they replaced; dark mode overrides them below. */
+  --color-surface: #ffffff; /* page, header, in-flow cards */
+  --color-elevated: #ffffff; /* menus, modals, popovers, pills on photos */
+  --color-raised: #ffffff; /* selected segment on a grey track */
+  --color-on-hof: #ffffff; /* text on hof (black) buttons */
+  --color-hof-hover: #000000; /* hover of hof buttons */
+  --color-input: #b0b0b0; /* booking card field borders */
+  --color-avatar: #222222; /* darkest letter-avatar colour (components/ui/Avatar.tsx) */
 
   /* Brand gradient: bg-rausch-gradient */
   --background-image-rausch-gradient: linear-gradient(
@@ -96,8 +104,36 @@
   --breakpoint-2xl: 1440px;
 }
 
+/* Dark theme: the init script in app/layout.tsx sets data-theme on <html> before paint. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-surface: #121212;
+  --color-elevated: #222222;
+  --color-raised: #4a4a4a;
+  --color-on-hof: #121212;
+  --color-hof-hover: #ffffff;
+  --color-input: #6a6a6a;
+  --color-avatar: #4a4a4a;
+  --color-product-rausch: #ff5a78;
+  --color-rausch-light: #4a1d27;
+  --color-hof: #f2f2f2;
+  --color-secondary: #a8a8a8;
+  --color-foggy: #9a9a9a;
+  --color-tertiary: #858585;
+  --color-disabled: #5e5e5e;
+  --color-deco: #484848;
+  --color-bebe: #383838;
+  --color-faint: #2a2a2a;
+  --color-quaternary: #2e2e2e;
+  --color-arches: #ff7a5c;
+  --color-spruce: #2fbf4a;
+  --color-spruce-text: #4cc965;
+  --color-discount: #12331a;
+  --color-legal: #7aaeff;
+}
+
 body {
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-hof);
   font-size: 14px;
   line-height: 20px;
@@ -136,18 +172,20 @@ body {
   animation: fade-in 200ms var(--ease-standard);
 }
 .skeleton {
-  background: linear-gradient(90deg, #ebebeb 25%, #f7f7f7 50%, #ebebeb 75%);
+  background: linear-gradient(90deg, var(--color-bebe) 25%, var(--color-faint) 50%, var(--color-bebe) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
 
 /* Date range calendar: react-day-picker restyled to Airbnb (spec section 2, When panel). */
 .airbnb-cal.rdp-root {
-  --rdp-accent-color: #222222;
-  --rdp-accent-background-color: #f7f7f7;
-  --rdp-range_middle-background-color: #f7f7f7;
-  --rdp-range_start-date-background-color: #222222;
-  --rdp-range_end-date-background-color: #222222;
+  --rdp-accent-color: var(--color-hof);
+  --rdp-accent-background-color: var(--color-faint);
+  --rdp-range_middle-background-color: var(--color-faint);
+  --rdp-range_start-date-background-color: var(--color-hof);
+  --rdp-range_end-date-background-color: var(--color-hof);
+  --rdp-range_start-color: var(--color-on-hof);
+  --rdp-range_end-color: var(--color-on-hof);
   --rdp-months-gap: 32px;
   --rdp-day-width: 44px;
   --rdp-day-height: 44px;
@@ -167,7 +205,7 @@ body {
   opacity: 1;
   font-size: 12px;
   font-weight: 500;
-  color: #6c6c6c;
+  color: var(--color-secondary);
 }
 .airbnb-cal .rdp-button_previous,
 .airbnb-cal .rdp-button_next {
@@ -175,7 +213,7 @@ body {
 }
 .airbnb-cal .rdp-button_previous:hover:not(:disabled),
 .airbnb-cal .rdp-button_next:hover:not(:disabled) {
-  background: #f7f7f7;
+  background: var(--color-faint);
 }
 .airbnb-cal .rdp-selected {
   font-size: inherit;
@@ -185,15 +223,15 @@ body {
   border: 1px solid transparent;
 }
 .airbnb-cal .rdp-day_button:hover:not(:disabled) {
-  border-color: #222222;
+  border-color: var(--color-hof);
 }
 .airbnb-cal .rdp-range_middle .rdp-day_button {
   border: 1px solid transparent;
   border-radius: 100%;
 }
 .airbnb-cal .rdp-range_middle .rdp-day_button:hover:not(:disabled) {
-  border-color: #222222;
-  background: #fff;
+  border-color: var(--color-hof);
+  background: var(--color-surface);
 }
 .airbnb-cal .rdp-today:not(.rdp-outside):not(.rdp-selected) {
   font-weight: 600;
@@ -203,14 +241,14 @@ body {
   opacity: 1;
 }
 .airbnb-cal .rdp-disabled .rdp-day_button {
-  color: #c1c1c1;
+  color: var(--color-disabled);
   cursor: default;
 }
 .airbnb-cal .cal-booked .rdp-day_button:disabled {
   text-decoration: line-through;
 }
 .airbnb-cal .rdp-day_button:focus-visible {
-  outline: 2px solid #222222;
+  outline: 2px solid var(--color-hof);
   outline-offset: 2px;
 }
 
@@ -223,8 +261,8 @@ body {
   width: max-content;
   padding: 6px 10px;
   border-radius: 28px;
-  background: #fff;
-  color: #222;
+  background: var(--color-elevated);
+  color: var(--color-hof);
   font-size: 14px;
   font-weight: 600;
   line-height: 16px;
@@ -235,8 +273,8 @@ body {
   transform: translate(-50%, -50%) scale(1.08);
 }
 .price-pin-hot {
-  background: #222;
-  color: #fff;
+  background: var(--color-hof);
+  color: var(--color-on-hof);
   transform: translate(-50%, -50%) scale(1.12);
 }
 .leaflet-container {
@@ -245,12 +283,41 @@ body {
 .leaflet-tile-pane {
   filter: grayscale(0.75) brightness(1.06) contrast(0.92);
 }
+/* Dark map: invert the tiles only (pins and controls are styled with tokens). */
+[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) grayscale(0.75) brightness(0.85) contrast(0.9);
+}
+[data-theme="dark"] .leaflet-container {
+  background: var(--color-faint);
+}
+[data-theme="dark"] .price-pin:not(.price-pin-hot) {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--color-deco);
+}
+[data-theme="dark"] .leaflet-bar a {
+  background: var(--color-elevated);
+  color: var(--color-hof);
+  border-color: var(--color-deco);
+}
+[data-theme="dark"] .leaflet-container .leaflet-control-attribution {
+  background: rgba(18, 18, 18, 0.8);
+  color: var(--color-secondary);
+}
+[data-theme="dark"] .leaflet-container .leaflet-control-attribution a {
+  color: var(--color-legal);
+}
+
+/* Toasts (sonner): its own light theme stays as is; dark mode swaps its colour variables. */
+[data-theme="dark"] [data-sonner-toaster][data-sonner-theme] {
+  --normal-bg: var(--color-elevated);
+  --normal-border: var(--color-bebe);
+  --normal-text: var(--color-hof);
+}
 
 /* Two-thumb price slider: two range inputs stacked; only the thumbs take the mouse. */
 .dual-range input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; appearance: none; background: transparent; pointer-events: none; }
-.dual-range input[type="range"]::-webkit-slider-thumb { appearance: none; pointer-events: auto; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 1px solid #b0b0b0; box-shadow: 0 1px 3px rgba(0,0,0,.2); cursor: grab; }
-.dual-range input[type="range"]::-moz-range-thumb { pointer-events: auto; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 1px solid #b0b0b0; box-shadow: 0 1px 3px rgba(0,0,0,.2); cursor: grab; }
-.dual-range input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid #222; }
+.dual-range input[type="range"]::-webkit-slider-thumb { appearance: none; pointer-events: auto; width: 24px; height: 24px; border-radius: 50%; background: var(--color-elevated); border: 1px solid var(--color-input); box-shadow: 0 1px 3px rgba(0,0,0,.2); cursor: grab; }
+.dual-range input[type="range"]::-moz-range-thumb { pointer-events: auto; width: 24px; height: 24px; border-radius: 50%; background: var(--color-elevated); border: 1px solid var(--color-input); box-shadow: 0 1px 3px rgba(0,0,0,.2); cursor: grab; }
+.dual-range input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--color-hof); }
 
 /* Location map pin (components/map/LocationMap.tsx): black circle, anchor at its centre. */
 .house-pin {
@@ -261,7 +328,8 @@ body {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #222;
+  background: var(--color-hof);
+  color: var(--color-on-hof);
   box-shadow: 0 0 0 4px rgba(34, 34, 34, 0.2);
 }
 

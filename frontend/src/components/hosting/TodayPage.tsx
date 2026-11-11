@@ -15,8 +15,8 @@ import type { Booking, HostListingCard } from "@/lib/types";
 
 type View = "today" | "upcoming" | "past" | "cancelled";
 
-const pill = (on: boolean) => `rounded-pill px-4 py-2 text-tab ${on ? "bg-hof text-white" : "border border-deco hover:border-hof"}`;
-const selectCls = "rounded-pill border border-deco bg-white px-3 py-2 text-tab hover:border-hof";
+const pill = (on: boolean) => `rounded-pill px-4 py-2 text-tab ${on ? "bg-hof text-on-hof" : "border border-deco hover:border-hof"}`;
+const selectCls = "rounded-pill border border-deco bg-surface px-3 py-2 text-tab hover:border-hof";
 
 function ReservationCard({ b }: { b: Booking }) {
   const name = b.guest?.name ?? "Guest";

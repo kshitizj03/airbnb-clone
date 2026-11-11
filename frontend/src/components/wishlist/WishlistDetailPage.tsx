@@ -104,7 +104,7 @@ export function WishlistDetailPage({ id }: { id: string }) {
               <>
                 {/* Click anywhere else closes the menu. */}
                 <button type="button" aria-label="Close menu" tabIndex={-1} className="fixed inset-0 z-10 cursor-default" onClick={() => setMenuOpen(false)} />
-                <div role="menu" className="absolute right-0 z-20 mt-1 w-48 rounded-12 bg-white py-2 shadow-elevation2">
+                <div role="menu" className="absolute right-0 z-20 mt-1 w-48 rounded-12 bg-elevated py-2 shadow-elevation2">
                   <button
                     type="button"
                     role="menuitem"

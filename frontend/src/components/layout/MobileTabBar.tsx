@@ -36,7 +36,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-bebe bg-white md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-bebe bg-surface md:hidden"
     >
       {tabs.map(({ label, Icon, href }) => {
         const active = href !== undefined && (href === "/" ? pathname === "/" : pathname.startsWith(href));

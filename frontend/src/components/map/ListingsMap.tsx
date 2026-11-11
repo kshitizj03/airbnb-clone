@@ -79,7 +79,7 @@ export function ListingsMap({ listings, hoveredId, savedIds, hrefFor = (id) => `
       </MapContainer>
 
       {selected && (
-        <div className="absolute bottom-6 left-1/2 z-[1000] w-[calc(100%-32px)] max-w-[300px] -translate-x-1/2 overflow-hidden rounded-20 bg-white shadow-secondary">
+        <div className="absolute bottom-6 left-1/2 z-[1000] w-[calc(100%-32px)] max-w-[300px] -translate-x-1/2 overflow-hidden rounded-20 bg-elevated shadow-secondary">
           <div className="group relative aspect-[4/3] bg-bebe">
             <PhotoCarousel photos={selected.photos} alt={selected.title} href={hrefFor(selected.id)} />
             <HeartButton listing={selected} />
@@ -87,7 +87,7 @@ export function ListingsMap({ listings, hoveredId, savedIds, hrefFor = (id) => `
               type="button"
               aria-label="Close"
               onClick={() => setSelectedId(null)}
-              className="absolute top-3 left-3 z-10 flex size-8 items-center justify-center rounded-full bg-white shadow-elevation1 hover:scale-105"
+              className="absolute top-3 left-3 z-10 flex size-8 items-center justify-center rounded-full bg-elevated shadow-elevation1 hover:scale-105"
             >
               <X size={14} strokeWidth={2.5} />
             </button>

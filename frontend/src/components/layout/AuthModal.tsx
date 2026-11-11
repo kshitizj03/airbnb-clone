@@ -54,7 +54,7 @@ function Field({
       <label
         className={`block px-3 pt-2 pb-1 ${
           error ? "border-2 border-arches" : "border border-deco focus-within:border-2 focus-within:border-hof"
-        } rounded-8 bg-white`}
+        } rounded-8 bg-surface`}
       >
         <span className="block text-label text-secondary">{label}</span>
         <input
@@ -114,7 +114,7 @@ function AuthModal({ open, reason, onClose }: { open: boolean; reason?: string; 
       aria-selected={mode === m}
       onClick={() => switchMode(m)}
       className={`flex-1 rounded-pill py-2 text-sm font-medium ${
-        mode === m ? "bg-white shadow-elevation1" : "text-secondary hover:text-hof"
+        mode === m ? "bg-raised shadow-elevation1" : "text-secondary hover:text-hof"
       }`}
     >
       {text}

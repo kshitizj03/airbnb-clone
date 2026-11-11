@@ -57,7 +57,7 @@ export function BookingCard({ listing, bookedRanges }: { listing: ListingDetail;
   if (isMobile) {
     return (
       <>
-        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-4 border-t border-bebe bg-white px-4 py-3">
+        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-4 border-t border-bebe bg-surface px-4 py-3">
           <div className="min-w-0">
             {b.quote ? (
               <p className="truncate">
@@ -115,13 +115,13 @@ export function BookingCard({ listing, bookedRanges }: { listing: ListingDetail;
   const label = "block text-[10px] leading-3 font-bold tracking-wide uppercase";
   return (
     <div ref={cardRef}>
-      <div className="mb-3 flex items-center gap-3 rounded-16 border border-bebe bg-white px-4 py-3 text-sm shadow-elevation2">
+      <div className="mb-3 flex items-center gap-3 rounded-16 border border-bebe bg-surface px-4 py-3 text-sm shadow-elevation2">
         <Tag size={20} />
         <span>
           <span className="font-semibold">Prices include all fees.</span> No hidden charges.
         </span>
       </div>
-      <div className="rounded-16 border border-deco bg-white p-6 shadow-secondary">
+      <div className="rounded-16 border border-deco bg-surface p-6 shadow-secondary">
         <div className="relative min-h-7">
           {b.quote ? (
             <p>
@@ -144,9 +144,9 @@ export function BookingCard({ listing, bookedRanges }: { listing: ListingDetail;
         </div>
 
         <div className="relative mt-4">
-          <div className="overflow-hidden rounded-8 border border-[#b0b0b0]">
+          <div className="overflow-hidden rounded-8 border border-input">
             <div className="grid grid-cols-2">
-              <button type="button" aria-expanded={open === "dates"} onClick={() => toggle("dates")} className={`${box} border-r border-[#b0b0b0]`}>
+              <button type="button" aria-expanded={open === "dates"} onClick={() => toggle("dates")} className={`${box} border-r border-input`}>
                 <span className={label}>Check-in</span>
                 <span className={`text-sm ${b.range.from ? "" : "text-secondary"}`}>{b.range.from ? format(b.range.from, "d/M/yyyy") : "Add date"}</span>
               </button>
@@ -159,7 +159,7 @@ export function BookingCard({ listing, bookedRanges }: { listing: ListingDetail;
               type="button"
               aria-expanded={open === "guests"}
               onClick={() => toggle("guests")}
-              className={`${box} flex w-full items-center justify-between border-t border-[#b0b0b0]`}
+              className={`${box} flex w-full items-center justify-between border-t border-input`}
             >
               <span>
                 <span className={label}>Guests</span>
@@ -229,7 +229,7 @@ export function ReserveButton({ b, onCheck, className = "" }: { b: ReturnType<ty
 
 function Popover({ title, onClose, className, children }: { title?: string; onClose?: () => void; className: string; children: ReactNode }) {
   return (
-    <div className={`absolute z-20 rounded-16 bg-white p-6 shadow-high ${className}`}>
+    <div className={`absolute z-20 rounded-16 bg-elevated p-6 shadow-high ${className}`}>
       {title && (
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-base font-semibold">{title}</h3>

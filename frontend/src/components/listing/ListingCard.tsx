@@ -30,7 +30,7 @@ interface Props {
 export function ListingCard({ listing: l, variant, onHover, href = `/rooms/${l.id}` }: Props) {
   const favourite = l.rating !== null && l.rating >= 4.9 && l.review_count >= 5;
   const badge = favourite && (
-    <span className="pointer-events-none absolute top-3 left-3 z-10 rounded-pill bg-white px-2.5 py-1 text-label font-medium shadow-elevation1">
+    <span className="pointer-events-none absolute top-3 left-3 z-10 rounded-pill bg-elevated px-2.5 py-1 text-label font-medium shadow-elevation1">
       Guest favourite
     </span>
   );

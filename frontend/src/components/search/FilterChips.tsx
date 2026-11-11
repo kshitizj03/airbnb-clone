@@ -32,7 +32,7 @@ const QUICK: Quick[] = [
 ];
 const QUICK_AMENITIES = new Set(["free-parking", "kitchen", "air-conditioning", "tv", "hot-tub", "wifi"]);
 
-const base = "flex h-[34px] shrink-0 items-center gap-2 rounded-24 border bg-white px-4 text-label whitespace-nowrap hover:border-hof";
+const base = "flex h-[34px] shrink-0 items-center gap-2 rounded-24 border bg-surface px-4 text-label whitespace-nowrap hover:border-hof";
 
 /** The filter row above the results: Filters button, the applied filters, then quick toggles. */
 export function FilterChips({ filters: f, amenityNames, onChange, onOpenFilters }: Props) {
@@ -67,7 +67,7 @@ export function FilterChips({ filters: f, amenityNames, onChange, onOpenFilters 
         <SlidersHorizontal size={14} />
         Filters
         {count > 0 && (
-          <span aria-label={`${count} active`} className="flex size-5 items-center justify-center rounded-full bg-hof text-[11px] text-white">
+          <span aria-label={`${count} active`} className="flex size-5 items-center justify-center rounded-full bg-hof text-[11px] text-on-hof">
             {count}
           </span>
         )}

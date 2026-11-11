@@ -154,7 +154,7 @@ function Editor({ listing }: { listing: ListingDetail }) {
             <Settings size={18} />
           </button>
           {menuOpen && (
-            <div role="menu" className="animate-fade-in absolute top-full right-0 z-20 mt-2 w-48 rounded-12 bg-white py-2 shadow-secondary">
+            <div role="menu" className="animate-fade-in absolute top-full right-0 z-20 mt-2 w-48 rounded-12 bg-elevated py-2 shadow-secondary">
               <button
                 type="button"
                 role="menuitem"
@@ -179,7 +179,7 @@ function Editor({ listing }: { listing: ListingDetail }) {
               type="button"
               aria-current={current === s.id ? "true" : undefined}
               onClick={() => setSelected(s.id)}
-              className={`w-full rounded-16 bg-white p-5 text-left shadow-elevation2 ${current === s.id ? "border border-hof" : "border border-transparent hover:border-deco"}`}
+              className={`w-full rounded-16 bg-elevated p-5 text-left shadow-elevation2 ${current === s.id ? "border border-hof" : "border border-transparent hover:border-deco"}`}
             >
               <span className="block text-card">{s.label}</span>
               <span className="mt-1 line-clamp-2 block text-sm font-normal text-secondary">{s.summary(listing)}</span>
@@ -198,7 +198,7 @@ function Editor({ listing }: { listing: ListingDetail }) {
       </ul>
 
       <div className="sticky bottom-6 mt-6 flex justify-center">
-        <Link href={`/rooms/${listing.id}`} className="inline-flex h-12 items-center gap-2 rounded-pill bg-hof px-6 text-button text-white shadow-primary hover:bg-black">
+        <Link href={`/rooms/${listing.id}`} className="inline-flex h-12 items-center gap-2 rounded-pill bg-hof px-6 text-button text-on-hof shadow-primary hover:bg-hof-hover">
           <Eye size={18} /> View
         </Link>
       </div>
@@ -216,7 +216,7 @@ function Editor({ listing }: { listing: ListingDetail }) {
         <h2 className="text-[32px] leading-10 font-semibold">{section.label}</h2>
       </div>
       <SectionField id={current} draft={draft} patch={patch} error={sectionError(current, fields)} />
-      <div className="sticky bottom-0 -mx-4 mt-8 flex justify-end border-t border-bebe bg-white px-4 py-4 md:mx-0 md:px-0">
+      <div className="sticky bottom-0 -mx-4 mt-8 flex justify-end border-t border-bebe bg-surface px-4 py-4 md:mx-0 md:px-0">
         <Button size="lg" disabled={!dirty || saving || !sectionOk(current, draft)} onClick={save}>
           {saving ? "Saving..." : "Save"}
         </Button>

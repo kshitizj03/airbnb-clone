@@ -97,7 +97,7 @@ export function Modal({ open, onClose, title, footer, size = "md", layer = "z-50
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         aria-label={title ? undefined : "Dialog"}
-        className={`animate-modal-in flex h-full w-full flex-col overflow-hidden bg-white shadow-high md:h-auto md:max-h-[90vh] md:rounded-32 ${widths[size]}`}
+        className={`animate-modal-in flex h-full w-full flex-col overflow-hidden bg-elevated shadow-high md:h-auto md:max-h-[90vh] md:rounded-32 ${widths[size]}`}
       >
         <div className="relative flex h-16 shrink-0 items-center justify-center border-b border-bebe px-16">
           <button

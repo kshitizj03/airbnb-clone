@@ -39,7 +39,7 @@ export function Pagination({ page, pages, onPage }: Props) {
             aria-label={`Page ${n}`}
             aria-current={n === page ? "page" : undefined}
             onClick={() => onPage(n)}
-            className={`flex size-8 items-center justify-center rounded-full text-sm ${n === page ? "bg-hof font-semibold text-white" : "hover:bg-faint"}`}
+            className={`flex size-8 items-center justify-center rounded-full text-sm ${n === page ? "bg-hof font-semibold text-on-hof" : "hover:bg-faint"}`}
           >
             {n}
           </button>

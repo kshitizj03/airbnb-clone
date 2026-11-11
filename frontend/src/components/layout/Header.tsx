@@ -77,7 +77,7 @@ export function Header() {
   const onRoom = pathname.startsWith("/rooms/");
   return (
     <div className={`${spacer} ${onRoom ? "max-md:hidden" : ""}`}>
-      <header className={`fixed inset-x-0 top-0 z-40 border-b bg-white ${compact || logoOnly ? "border-bebe" : "border-transparent"}`}>
+      <header className={`fixed inset-x-0 top-0 z-40 border-b bg-surface ${compact || logoOnly ? "border-bebe" : "border-transparent"}`}>
         {logoOnly ? (
           <div className="flex h-20 items-center px-4 md:px-12">
             <HomeLink />

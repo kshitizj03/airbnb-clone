@@ -48,7 +48,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   function showToast(listing: ListingCard, text: string, canChange: boolean) {
     toast.custom(
       (id) => (
-        <div className="flex h-[66px] w-[375px] max-w-full items-center gap-3 rounded-12 bg-white p-3 shadow-secondary">
+        <div className="flex h-[66px] w-[375px] max-w-full items-center gap-3 rounded-12 bg-elevated p-3 shadow-secondary">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={listing.photos[0]} alt="" className="size-10 rounded-8 object-cover" />
           <span className="flex-1 truncate text-tab">{text}</span>

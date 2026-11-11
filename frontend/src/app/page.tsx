@@ -13,7 +13,7 @@ import type { ListingCard as Listing, Page } from "@/lib/types";
 const CITIES = ["Goa", "Jaipur", "Manali", "Udaipur", "Mumbai", "Bengaluru"];
 
 const roundBtn =
-  "flex size-8 items-center justify-center rounded-full border border-deco bg-white hover:scale-105 hover:shadow-elevation1 disabled:cursor-default disabled:opacity-30 disabled:hover:scale-100 disabled:hover:shadow-none";
+  "flex size-8 items-center justify-center rounded-full border border-deco bg-surface hover:scale-105 hover:shadow-elevation1 disabled:cursor-default disabled:opacity-30 disabled:hover:scale-100 disabled:hover:shadow-none";
 
 function CityRow({ city }: { city: string }) {
   const { data, isPending, isError, refetch } = useQuery({
@@ -55,7 +55,7 @@ function CityRow({ city }: { city: string }) {
       {isError ? (
         <div className="flex h-[220px] flex-col items-center justify-center gap-3 rounded-20 bg-faint">
           <p className="font-medium">Couldn&apos;t load homes</p>
-          <button type="button" onClick={() => refetch()} className="rounded-8 border border-hof px-4 py-2 font-medium hover:bg-white">
+          <button type="button" onClick={() => refetch()} className="rounded-8 border border-hof px-4 py-2 font-medium hover:bg-surface">
             Try again
           </button>
         </div>

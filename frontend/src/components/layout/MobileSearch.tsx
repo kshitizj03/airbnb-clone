@@ -137,7 +137,7 @@ function Card({
       <button
         type="button"
         onClick={onOpen}
-        className="flex h-14 w-full items-center justify-between rounded-24 bg-white px-6 text-tab shadow-elevation2"
+        className="flex h-14 w-full items-center justify-between rounded-24 bg-elevated px-6 text-tab shadow-elevation2"
       >
         <span className="text-secondary">{label}</span>
         <span className="truncate pl-4">{value || placeholder}</span>
@@ -145,7 +145,7 @@ function Card({
     );
   }
   return (
-    <section className="rounded-24 bg-white p-6 shadow-secondary">
+    <section className="rounded-24 bg-elevated p-6 shadow-secondary">
       <h2 className="mb-4 text-section">{title}</h2>
       {children}
     </section>

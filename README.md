@@ -32,6 +32,7 @@ Try it in six steps:
 | Wishlists | Heart a listing (creates or picks a wishlist), wishlist pages, remove items, delete lists |
 | Hosting | Dashboard with reservations, own listings, create-listing wizard with photo upload (Vercel Blob in production) or URL, listing editor, soft delete (refused if upcoming bookings exist) |
 | Auth | Email and password sign-up and login, HttpOnly session cookie, demo buttons |
+| Dark mode | Follows the device setting by default; a Light / Dark / System switch sits at the bottom of the user menu (top right, also when logged out). The choice is saved in the browser and applied before first paint, so there is no flash of the wrong theme |
 | Placeholders | Messages, Experiences, Services, profile and the footer links open a "Coming soon" page; checkout is a mocked card form |
 
 ## Tech stack

@@ -85,7 +85,7 @@ export function SearchResults() {
             <div className="flex flex-col items-center gap-3 py-24 text-center">
               <p className="text-section">Something went wrong</p>
               <p className="text-secondary">We could not load the homes. Please try again.</p>
-              <button type="button" onClick={() => refetch()} className="mt-2 h-12 rounded-8 bg-hof px-6 text-button text-white hover:bg-black">
+              <button type="button" onClick={() => refetch()} className="mt-2 h-12 rounded-8 bg-hof px-6 text-button text-on-hof hover:bg-hof-hover">
                 Try again
               </button>
             </div>
@@ -131,7 +131,7 @@ export function SearchResults() {
 
         {/* One map: a sticky column from 950px up, a full-screen overlay on phones once "Map" is tapped. */}
         <div
-          className={`${mapOpen ? "fixed inset-0 z-[45] bg-white" : "hidden"} lg:sticky lg:inset-x-auto lg:top-[97px] lg:bottom-auto lg:z-0 lg:block lg:h-[calc(100vh-113px)] lg:w-[40%] lg:shrink-0 lg:overflow-hidden lg:rounded-20 lg:border lg:border-bebe`}
+          className={`${mapOpen ? "fixed inset-0 z-[45] bg-surface" : "hidden"} lg:sticky lg:inset-x-auto lg:top-[97px] lg:bottom-auto lg:z-0 lg:block lg:h-[calc(100vh-113px)] lg:w-[40%] lg:shrink-0 lg:overflow-hidden lg:rounded-20 lg:border lg:border-bebe`}
         >
           <ListingsMap listings={items} hoveredId={hoveredId} savedIds={savedIds} hrefFor={hrefFor} />
         </div>
@@ -140,7 +140,7 @@ export function SearchResults() {
       <button
         type="button"
         onClick={() => setMapOpen(!mapOpen)}
-        className="fixed bottom-20 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-pill bg-hof px-5 py-3 text-tab text-white shadow-secondary lg:hidden"
+        className="fixed bottom-20 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-pill bg-hof px-5 py-3 text-tab text-on-hof shadow-secondary lg:hidden"
       >
         {mapOpen ? <List size={16} /> : <MapIcon size={16} />}
         {mapOpen ? "List" : "Map"}

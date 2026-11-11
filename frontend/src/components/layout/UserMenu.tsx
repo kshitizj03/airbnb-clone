@@ -4,12 +4,49 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { CircleHelp, Heart, Menu, MessageSquare, Plane, Settings, User as UserIcon } from "lucide-react";
+import { CircleHelp, Heart, Menu, MessageSquare, Monitor, Moon, Plane, Settings, Sun, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { getTheme, setTheme, type Theme } from "@/lib/theme";
 import { useAuthModal } from "./AuthModal";
 
 const row = "flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-faint";
 const divider = <div role="separator" className="my-2 h-px bg-bebe" />;
+
+const THEMES = [
+  ["light", "Light", Sun],
+  ["dark", "Dark", Moon],
+  ["system", "System", Monitor],
+] as const;
+
+/** Light / Dark / System. Only rendered inside the open menu (client side), so reading localStorage here is safe. */
+function ThemeSwitch() {
+  const [theme, setChoice] = useState<Theme>(getTheme);
+  return (
+    <div role="group" aria-label="Theme" className="px-4 py-2">
+      <p className="mb-2 text-sm">Theme</p>
+      <div className="flex gap-1 rounded-pill bg-quaternary p-1">
+        {THEMES.map(([value, label, Icon]) => (
+          <button
+            key={value}
+            type="button"
+            role="menuitemradio"
+            aria-checked={theme === value}
+            onClick={() => {
+              setTheme(value);
+              setChoice(value);
+            }}
+            className={`flex flex-1 items-center justify-center gap-1 rounded-pill py-1.5 text-label ${
+              theme === value ? "bg-raised shadow-elevation1" : "text-secondary hover:text-hof"
+            }`}
+          >
+            <Icon size={14} aria-hidden />
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function UserMenu() {
   const { user, logout } = useAuth();
@@ -87,7 +124,7 @@ export function UserMenu() {
       {open && (
         <div
           role="menu"
-          className="animate-fade-in absolute top-full right-0 z-50 mt-2 w-60 rounded-12 bg-white py-2 shadow-secondary"
+          className="animate-fade-in absolute top-full right-0 z-50 mt-2 w-60 rounded-12 bg-elevated py-2 shadow-secondary"
         >
           {user ? (
             <>
@@ -123,6 +160,8 @@ export function UserMenu() {
               </button>
             </>
           )}
+          {divider}
+          <ThemeSwitch />
         </div>
       )}
     </div>
