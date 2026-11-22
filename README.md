@@ -23,7 +23,7 @@ The database (Neon) scales to zero when idle, so the first request after a quiet
 4. Confirm with any test card, e.g. `4242 4242 4242 4242`, any future expiry, any 3-digit CVC.
 5. See the confirmation banner, then the booking under **Trips** (you can cancel it there).
 6. Still as the demo guest, open **Trips > Past**: three past stays have **Write a review**.
-7. Log in as the demo host, click **Switch to hosting**, open **Listings** and create a listing with the **+** button (upload a photo or paste a link); it appears in search.
+7. Log in as the demo host, click **Switch to hosting**, open **Listings** and create a listing with the **+** button (upload a photo or paste an Unsplash link); it appears in search.
 8. Open the user menu (top right) and switch the theme to **Dark**.
 
 ## Engineering highlights
@@ -34,7 +34,8 @@ The database (Neon) scales to zero when idle, so the first request after a quiet
 - **Uploads checked before they reach storage.** `/upload` forwards the cookie to `/api/auth/me` to check the session, caps files at 4 MB, and requires the file's magic bytes (JPEG, PNG, WebP) to agree with its declared type before storing it in Vercel Blob under a random name.
 - **Dark mode without a flash.** An inline script in `<head>` reads the saved choice (or the device setting) and sets the theme before first paint.
 - **Derived data is computed, not stored.** Ratings (`AVG`/`COUNT` over reviews), the six category scores and the Superhost badge are computed per request, so they cannot drift.
-- **CI on real Postgres.** GitHub Actions runs the backend tests against a `postgres:17` service and lints, type-checks and builds the frontend on every push to `main` and every pull request.
+- **CI on real Postgres.** GitHub Actions lints the backend with ruff, runs its tests against a `postgres:17` service, and lints, type-checks and builds the frontend on every push to `main` and every pull request.
+- **Validated at the boundary.** Every request field has bounds (ids, coordinates, prices, guest counts, text length, paging), blank text is rejected, and photo links must be https from Unsplash or the app's Vercel Blob store. Anything unexpected still answers in the shared error shape (500 `internal_error`) and is logged.
 
 ## Features
 
@@ -55,7 +56,7 @@ The database (Neon) scales to zero when idle, so the first request after a quiet
 | Layer | Tech |
 |---|---|
 | Frontend | Next.js 16.4 (App Router), React 19.3, TypeScript 5, Tailwind CSS 4.3, TanStack Query 5, react-day-picker 10, Leaflet 1.9 + react-leaflet 5 (OpenStreetMap tiles), date-fns 4, @vercel/blob 2.8, sonner, lucide-react |
-| Backend | Python 3.12, FastAPI 0.162, SQLAlchemy 2.1 (sync), psycopg 3.3, Pydantic 2.14, uvicorn 0.54, PyJWT, bcrypt |
+| Backend | Python 3.12, FastAPI 0.162, SQLAlchemy 2.1 (sync), psycopg 3.3, Pydantic 2.14, PyJWT, bcrypt; uvicorn 0.54 and ruff for local work |
 | Database | Postgres (Neon in production, `postgres:17` locally and in CI) |
 | Tests | pytest + httpx (backend), node:assert check scripts, ESLint, `tsc` (frontend) |
 | Hosting | Vercel (two projects: Next.js app, FastAPI as a Vercel Function), Neon Postgres, Vercel Blob |
@@ -221,14 +222,14 @@ Rounding is half up to whole rupees. The rates are mock values (see Assumptions)
 
 ## API overview
 
-All routes are under `/api`; interactive docs are at `/docs` on the API URL. Errors share one shape: `{"error": {"code", "message", "fields?"}}`, with status 401, 403, 404, 409 or 422.
+All routes are under `/api`; interactive docs are at `/docs` on the API URL. Every error, including unexpected ones, shares one shape: `{"error": {"code", "message", "fields?"}}`, with status 401, 403, 404, 409, 422 (`fields` maps each bad field, e.g. `photo_urls.1`, to a message) or 500 (`internal_error`).
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/api/auth/signup` | - | Create account (name, email, password min 8), sets cookie |
 | POST | `/api/auth/login` | - | Log in, sets cookie |
 | POST | `/api/auth/demo` | - | Log in as the seeded demo `guest` or `host` |
-| POST | `/api/auth/logout` | user | Clear cookie |
+| POST | `/api/auth/logout` | - | Clear cookie (works with no or an expired session) |
 | GET | `/api/auth/me` | - | Current user, or 401 |
 | GET | `/api/listings` | - | Search and filter, 18 per page |
 | GET | `/api/listings/{id}` | - | Listing detail with rating breakdown and host stats |
@@ -312,7 +313,7 @@ npm run dev
 
 `.env.example` sets `BACKEND_URL=http://127.0.0.1:8000` (also the fallback when unset). Open http://localhost:3000.
 
-Photo uploads need `BLOB_READ_WRITE_TOKEN`. With access to the Vercel project, `vercel env pull` writes it into `.env.local` (keep `BACKEND_URL` pointing at the local API). Without it, `/upload` returns 503 `uploads_unavailable` and hosts can paste photo links instead.
+Photo uploads need `BLOB_READ_WRITE_TOKEN`. With access to the Vercel project, `vercel env pull` writes it into `.env.local` (keep `BACKEND_URL` pointing at the local API). Without it, `/upload` returns 503 `uploads_unavailable` and hosts can paste Unsplash photo links instead.
 
 ### Environment variables
 
@@ -321,9 +322,9 @@ Backend (read from the process environment):
 | Variable | Default | Purpose |
 |---|---|---|
 | `DATABASE_URL` | `postgresql+psycopg://postgres:postgres@localhost:5432/airbnb` | Postgres connection. `postgres://` and `postgresql://` URLs (as Neon issues them) are rewritten to use psycopg |
-| `JWT_SECRET` | dev value | Session signing key (set a real one in production) |
+| `JWT_SECRET` | dev value | Session signing key. Set a real one in production: the API refuses to start with the dev value when `COOKIE_SECURE=true` |
 | `COOKIE_SECURE` | `false` | Set `true` behind HTTPS |
-| `DEMO_PASSWORD` | dev value | Password the seed gives every seeded account (the demo buttons need none) |
+| `DEMO_PASSWORD` | dev value | Password the seed gives every seeded account (the demo buttons need none). Set one in production, where the nightly reset reads it from a repo secret |
 | `TEST_DATABASE_URL` | `postgresql+psycopg://postgres:postgres@localhost:5432/airbnb_test` | Tests only |
 
 Frontend:
@@ -339,10 +340,11 @@ Backend (needs the Postgres container):
 
 ```bash
 cd backend
-python -m pytest                # with the venv active
+ruff check .                    # lint, with the venv active
+python -m pytest
 ```
 
-The suite recreates the schema in `TEST_DATABASE_URL` at the start and truncates every table after each test, so point it at a throwaway database. 88 tests cover pricing, search filters, auth, bookings, reviews, host tools and wishlists. The ones that matter most: two concurrent bookings for the same nights (the constraint lets exactly one through), back-to-back stays, IST "today", price snapshots and ownership checks.
+The suite recreates the schema in `TEST_DATABASE_URL` at the start and truncates every table after each test, so point it at a throwaway database. 101 tests cover pricing, search filters, input validation, auth, bookings, reviews, host tools, wishlists and the seed. The ones that matter most: two concurrent bookings for the same nights (the constraint lets exactly one through), back-to-back stays, IST "today", price snapshots and ownership checks.
 
 Frontend:
 
@@ -355,13 +357,16 @@ npm run check:images    # upload type sniffing
 npm run build
 ```
 
-The check scripts import TypeScript directly, which needs Node 22.18 or newer. CI (`.github/workflows/ci.yml`) runs all of the above on every push to `main` and every pull request.
+The check scripts import TypeScript directly, which needs Node 22.18 or newer. CI (`.github/workflows/ci.yml`) runs all of the above, plus `ruff check .` and the backend tests, on every push to `main` and every pull request.
+
+`package.json` has an `overrides` entry: `@vercel/blob` pulls in `@vercel/cli-config`, which pins zod 4.1.11, affected by GHSA-mrhx-c7xc-m3w5; the override lifts it to the fixed 4.6.7. Drop it once `@vercel/cli-config` moves past that version (`npm ls zod`, `npm audit --omit=dev`).
 
 ## Deployment
 
 - **Two Vercel projects from one repo.** `airbnb-clone` has root directory `frontend` (Next.js). `airbnb-clone-api` has root directory `backend`; Vercel detects the FastAPI `app` in `app/main.py` and runs it as a Python 3.12 function (`backend/.python-version`). Both deploy from `main`.
 - **Region.** Functions run in Singapore (`sin1`), next to the database.
-- **Database.** Neon Postgres (free plan, `ap-southeast-1` Singapore), provisioned through the Vercel Marketplace, which injects `DATABASE_URL` into the API project. The schema and demo data are created once with `python -m app.seed` run against that URL.
+- **Database.** Neon Postgres (free plan, `ap-southeast-1` Singapore), provisioned through the Vercel Marketplace, which injects `DATABASE_URL` into the API project. The schema and demo data come from `python -m app.seed` run against that URL.
+- **Nightly demo reset.** `.github/workflows/reset-demo.yml` runs `python -m app.seed --reset` against Neon every night at 03:00 IST (and on demand from the Actions tab), so visitors' test bookings and listings do not pile up. It needs two repo secrets: `NEON_DATABASE_URL` (Neon's unpooled connection string) and `DEMO_PASSWORD`; the first step fails with a clear message when they are missing.
 - **Photos.** A public Vercel Blob store connected to the frontend project provides `BLOB_READ_WRITE_TOKEN`.
 - **Environment.** Frontend: `BACKEND_URL` (the API project's URL). API: `DATABASE_URL`, `JWT_SECRET`, `COOKIE_SECURE=true`.
 - **Build skipping.** Each project's Ignored Build Step is `git diff --quiet HEAD^ HEAD -- .`, so a push only rebuilds the project whose folder changed.
@@ -373,15 +378,16 @@ The check scripts import TypeScript directly, which needs Node 22.18 or newer. C
 - A host is a Superhost when the average rating across their live listings is at least 4.8 and those listings have at least 10 completed stays (confirmed, checked out by today).
 - A user becomes a host by creating a listing; there is no separate host sign-up.
 - A booking is confirmed immediately (no host approval step), and only stays that have not started can be cancelled.
-- Seeded listing photos are Unsplash URLs; hosts can also paste any https link. Vercel functions accept request bodies up to about 4.5 MB, so uploads are capped at 4 MB. The map uses OpenStreetMap tiles.
-- "Today" is computed in Asia/Kolkata for date validation.
+- Photos are Unsplash URLs or uploads to the app's Vercel Blob store: the API (and the wizard) only accept https links from `images.unsplash.com` or `*.public.blob.vercel-storage.com`. Vercel functions accept request bodies up to about 4.5 MB, so uploads are capped at 4 MB. The map uses OpenStreetMap tiles.
+- "Today" is computed in Asia/Kolkata for date validation, by the API and by the calendars and trip tabs in the browser.
 - No migrations: `python -m app.seed` only creates missing tables, so a change to an existing table needs `--reset` (which deletes all data).
-- Seed data is fictional and deterministic.
+- Seed data is fictional and deterministic. The live demo is reset to it every night, so anything created there is temporary.
 
 ## Project structure
 
 ```
-.github/workflows/ci.yml   backend tests on Postgres, frontend checks and build
+.github/workflows/ci.yml          ruff and backend tests on Postgres, frontend checks and build
+.github/workflows/reset-demo.yml  nightly reset of the live demo data
 backend/
   app/            FastAPI app: main.py, routers/, models.py, pricing.py, availability.py, seed.py
   tests/          pytest suite
