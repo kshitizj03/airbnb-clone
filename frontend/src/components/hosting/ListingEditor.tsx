@@ -187,7 +187,6 @@ function Editor({ listing }: { listing: ListingDetail }) {
               {s.id === "photos" && (
                 <span className="mt-3 flex gap-2">
                   {listing.photos.slice(0, 3).map((p) => (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img key={p} src={p} alt="" className="size-14 rounded-8 object-cover" />
                   ))}
                 </span>

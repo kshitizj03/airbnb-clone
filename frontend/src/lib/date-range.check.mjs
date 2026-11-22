@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { parseISO } from "date-fns";
-import { canSelectRange, isDayDisabled, nextRange } from "./date-range.ts";
+import { canSelectRange, isDayDisabled, istToday, nextRange } from "./date-range.ts";
 
 const d = (s) => parseISO(s);
 const booked = [[d("2026-12-10"), d("2026-12-14")]]; // nights 10, 11, 12, 13 taken
@@ -21,4 +21,7 @@ assert.deepEqual(first, { from: d("2026-12-03") });
 assert.deepEqual(nextRange(d("2026-12-05"), first, booked, min), { from: d("2026-12-03"), to: d("2026-12-05") });
 assert.deepEqual(nextRange(d("2026-12-02"), first, booked, min), { from: d("2026-12-02") }, "earlier click restarts");
 assert.deepEqual(nextRange(d("2026-12-20"), first, booked, min), first, "disabled click is ignored");
+// 18:00 UTC is 23:30 in India (same day); 19:00 UTC is 00:30 there (next day).
+assert.deepEqual(istToday(new Date("2026-12-01T18:00:00Z")), d("2026-12-01"), "IST evening");
+assert.deepEqual(istToday(new Date("2026-12-01T19:00:00Z")), d("2026-12-02"), "IST is already tomorrow");
 console.log("date-range checks passed");

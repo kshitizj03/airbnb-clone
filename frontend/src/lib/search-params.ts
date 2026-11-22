@@ -10,7 +10,7 @@ export interface SearchParams {
   children: number;
   infants: number;
   pets: number;
-  // Filters (UI arrives in the search page task)
+  // Filters
   minPrice?: number;
   maxPrice?: number;
   placeType?: string;
@@ -88,7 +88,7 @@ export function toQuery(p: SearchParams): string {
   return q.toString();
 }
 
-// "North Goa" <-> "North-Goa". ponytail: a city that really contains a hyphen comes back with a space.
+// "North Goa" <-> "North-Goa". Limitation: a city that really contains a hyphen comes back with a space.
 export const locationToSlug = (location: string): string =>
   encodeURIComponent(location.trim().replace(/\s+/g, "-"));
 

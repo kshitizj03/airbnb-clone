@@ -56,7 +56,7 @@ export interface Host {
   listing_count: number;
   review_count: number;
   rating: number | null;
-  is_superhost?: boolean; // missing from an older backend: treat as not a Superhost
+  is_superhost: boolean;
 }
 
 export interface RatingBreakdown {
@@ -128,7 +128,7 @@ export interface Booking {
   total: number;
   status: string;
   created_at: string;
-  reviewed?: boolean; // missing from an older backend: then no review button
+  reviewed: boolean; // the guest has reviewed this stay
 }
 
 export interface Wishlist {

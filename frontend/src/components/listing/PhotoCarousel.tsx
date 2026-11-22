@@ -27,7 +27,6 @@ export function PhotoCarousel({ photos, alt, href }: { photos: string[]; alt: st
         {photos.map((src, i) => (
           // The photo itself is the link, so the strip stays swipeable and a tap still opens the listing.
           <Link key={src} href={href} tabIndex={-1} draggable={false} className="size-full shrink-0 snap-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={i === 0 ? alt : ""} loading={i === 0 ? "eager" : "lazy"} draggable={false} className="size-full object-cover" />
           </Link>
         ))}

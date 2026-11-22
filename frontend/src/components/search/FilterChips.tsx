@@ -12,7 +12,7 @@ interface Props {
   onOpenFilters: () => void;
 }
 
-// Quick chips in the spec's order. Each one is a real backend filter.
+// Quick chips in Airbnb's order. Each one is a real backend filter.
 type Quick = { label: string; on: (f: Filters) => boolean; patch: (f: Filters) => Partial<Filters> };
 const amenityChip = (label: string, slug: string): Quick => ({
   label,

@@ -4,7 +4,6 @@ const COLORS = ["var(--color-avatar)", "#8a4b2f", "#2f6f8a", "#5b4a9b", "#2e7d4f
 export function Avatar({ name, src, size }: { name: string; src: string | null; size: number }) {
   const color = COLORS[[...name].reduce((sum, c) => sum + c.charCodeAt(0), 0) % COLORS.length];
   if (src) {
-    // eslint-disable-next-line @next/next/no-img-element
     return <img src={src} alt="" style={{ width: size, height: size }} className="shrink-0 rounded-full object-cover" />;
   }
   return (

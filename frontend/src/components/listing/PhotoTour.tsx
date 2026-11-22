@@ -26,7 +26,6 @@ export function PhotoTour({ listing, onShare }: { listing: ListingDetail; onShar
         {listing.photos.map((src, i) => (
           // Every third photo spans the row, so the grid looks like Airbnb's mixed layout.
           <button key={src} type="button" aria-label={`Open photo ${i + 1} of ${n}`} onClick={() => openModal("photos", { photo: i })} className={`overflow-hidden rounded-8 bg-bebe ${i % 3 === 0 ? "col-span-2 aspect-[3/2]" : "aspect-square"}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt="" loading={i < 4 ? "eager" : "lazy"} className="size-full object-cover hover:brightness-90" />
           </button>
         ))}
@@ -100,7 +99,6 @@ function PhotoViewer({ listing, index, onShare, onIndex, onClose }: { listing: L
         <button type="button" aria-label="Previous photo" disabled={index === 0} onClick={prev} className={`${arrow} max-md:hidden`}>
           <ChevronLeft size={20} />
         </button>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={listing.photos[index]} alt={`Photo ${index + 1} of ${n}`} className="mx-auto max-h-full min-w-0 max-w-full object-contain" />
         <button type="button" aria-label="Next photo" disabled={index === n - 1} onClick={next} className={`${arrow} max-md:hidden`}>
           <ChevronRight size={20} />

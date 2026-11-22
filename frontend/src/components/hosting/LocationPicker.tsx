@@ -35,7 +35,7 @@ function Recenter({ view }: { view: Props["view"] }) {
 export default function LocationPicker({ pin, view, onPin }: Props) {
   return (
     <MapContainer center={pin ?? view.center} zoom={pin ? 14 : view.zoom} zoomControl={false} className="size-full">
-      <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" maxZoom={19} />
+      <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' maxZoom={19} />
       <ZoomControl position="topright" />
       <ClickToPin onPin={onPin} />
       <Recenter view={view} />

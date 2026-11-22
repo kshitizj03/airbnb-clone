@@ -15,7 +15,7 @@ export const houseIcon = L.divIcon({
 export function LocationMap({ latitude, longitude }: { latitude: number; longitude: number }) {
   return (
     <MapContainer center={[latitude, longitude]} zoom={14} zoomControl={false} scrollWheelZoom={false} className="size-full">
-      <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" maxZoom={19} />
+      <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' maxZoom={19} />
       <ZoomControl position="topright" />
       <Marker position={[latitude, longitude]} icon={houseIcon} keyboard={false} />
     </MapContainer>

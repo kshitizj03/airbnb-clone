@@ -31,7 +31,6 @@ export function ShareModal({ listing, onClose }: { listing: ListingDetail; onClo
     <Modal open onClose={onClose} title="Share this place" size="sm" layer="z-[70]">
       <div className="p-6">
         <div className="flex items-center gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={listing.photos[0]} alt="" className="size-16 rounded-12 object-cover" />
           <p className="text-base">
             {listing.title}

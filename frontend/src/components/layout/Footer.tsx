@@ -45,6 +45,8 @@ export function Footer() {
           <p className="flex flex-wrap gap-x-2">
             <span>&copy; 2026 Airbnb clone</span>
             <span aria-hidden>&middot;</span>
+            <span>Not affiliated with Airbnb</span>
+            <span aria-hidden>&middot;</span>
             <Link href="/coming-soon/privacy" className="hover:underline">
               Privacy
             </Link>

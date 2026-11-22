@@ -127,7 +127,6 @@ function Review({ draft }: { draft: Draft }) {
   const names = draft.amenity_slugs.map((s) => amenities?.find((a) => a.slug === s)?.name ?? s);
   return (
     <div className="overflow-hidden rounded-24 border border-deco">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={draft.photo_urls[0]} alt="Cover photo" className="aspect-[16/10] w-full object-cover" />
       <div className="space-y-3 p-6">
         <h2 className="text-listing-title">{draft.title}</h2>

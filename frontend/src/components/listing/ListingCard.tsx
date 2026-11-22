@@ -41,7 +41,6 @@ export function ListingCard({ listing: l, variant, onHover, href = `/rooms/${l.i
     return (
       <div className="group relative w-[180px] shrink-0 snap-start" onMouseEnter={() => onHover?.(l.id)} onMouseLeave={() => onHover?.(null)}>
         <div className="relative aspect-[180/171] overflow-hidden rounded-20 bg-bebe">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={l.photos[0]} alt="" loading="lazy" className="size-full object-cover" />
           {badge}
           <HeartButton listing={l} />

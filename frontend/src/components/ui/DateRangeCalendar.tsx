@@ -3,7 +3,7 @@
 import { format, startOfDay } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
-import { isBookedNight, isDayDisabled, nextRange, type BookedRange, type DateRange } from "@/lib/date-range";
+import { isBookedNight, isDayDisabled, istToday, nextRange, type BookedRange, type DateRange } from "@/lib/date-range";
 
 interface DateRangeCalendarProps {
   value: DateRange;
@@ -11,12 +11,13 @@ interface DateRangeCalendarProps {
   months?: 1 | 2;
   /** Booked stays as [check_in, check_out): the nights inside are taken. */
   disabledRanges?: BookedRange[];
+  /** First selectable day; defaults to today in India, which is what the API checks against. */
   minDate?: Date;
 }
 
 /** react-day-picker for the grid; which days are clickable and what a click means is in lib/date-range.ts. */
 export function DateRangeCalendar({ value, onChange, months = 2, disabledRanges = [], minDate }: DateRangeCalendarProps) {
-  const min = startOfDay(minDate ?? new Date());
+  const min = startOfDay(minDate ?? istToday());
 
   return (
     <DayPicker

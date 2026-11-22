@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { isSameDay, isAfter, parseISO, startOfDay } from "date-fns";
+import { isSameDay, isAfter, parseISO } from "date-fns";
 import Link from "next/link";
 import { useState } from "react";
 import { ErrorState, tripGuests } from "@/components/trips/shared";
@@ -10,6 +10,7 @@ import { buttonStyles } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import { istToday } from "@/lib/date-range";
 import { formatDateRange, formatINR } from "@/lib/format";
 import type { Booking, HostListingCard } from "@/lib/types";
 
@@ -55,7 +56,7 @@ export function TodayPage() {
   const past = useReservations("past", listingId, !!user && (view === "today" || view === "past"));
   const cancelled = useReservations("cancelled", listingId, !!user && view === "cancelled");
 
-  const today = startOfDay(new Date());
+  const today = istToday(); // the API splits upcoming and past by the date in India
   // The API's "upcoming" is check-out after today, so a guest leaving today is in "past": Today needs both lists.
   const rows: Record<View, Booking[] | undefined> = {
     today:

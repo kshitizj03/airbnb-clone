@@ -1,25 +1,25 @@
 "use client";
 
-import { isAfter, parseISO, startOfDay } from "date-fns";
+import { isAfter, parseISO } from "date-fns";
 import type { ReactNode } from "react";
 import { useAuthModal } from "@/components/layout/AuthModal";
 import { Button } from "@/components/ui/Button";
+import { istToday } from "@/lib/date-range";
 import { guestSummary } from "@/lib/search-params";
 import type { Booking } from "@/lib/types";
 
 export type TripTab = "upcoming" | "past" | "cancelled";
 
-/** Upcoming = confirmed and check-out after today; past = confirmed and already over; cancelled = cancelled. */
+/** Upcoming = confirmed and check-out after today (in India, like the API); past = confirmed and already over; cancelled = cancelled. */
 export function tripTab(b: Booking): TripTab {
   if (b.status === "cancelled") return "cancelled";
-  return isAfter(parseISO(b.check_out), startOfDay(new Date())) ? "upcoming" : "past";
+  return isAfter(parseISO(b.check_out), istToday()) ? "upcoming" : "past";
 }
 
 /** The backend refuses to cancel once check-in is today or earlier, so only offer it before then. */
-export const canCancel = (b: Booking): boolean => b.status === "confirmed" && isAfter(parseISO(b.check_in), startOfDay(new Date()));
+export const canCancel = (b: Booking): boolean => b.status === "confirmed" && isAfter(parseISO(b.check_in), istToday());
 
-/** `=== false`, not falsy: an older backend sends no `reviewed`, and then the button stays hidden. */
-export const canReview = (b: Booking): boolean => b.reviewed === false && tripTab(b) === "past";
+export const canReview = (b: Booking): boolean => !b.reviewed && tripTab(b) === "past";
 
 export const tripGuests = (b: Booking): string => guestSummary({ adults: b.adults, children: b.children, infants: b.infants, pets: b.pets });
 

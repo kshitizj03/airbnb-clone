@@ -31,7 +31,6 @@ export function SaveToWishlistModal({
           <button key={w.id} type="button" onClick={() => onPick(w)} className="text-left">
             <div className="aspect-square overflow-hidden rounded-16 bg-bebe">
               {w.cover_photos[0] && (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img src={w.cover_photos[0]} alt="" className="size-full object-cover" />
               )}
             </div>

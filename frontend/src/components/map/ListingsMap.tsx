@@ -62,7 +62,7 @@ export function ListingsMap({ listings, hoveredId, savedIds, hrefFor = (id) => `
         <TileLayer
           // CARTO's free Positron tiles now answer "API key required", so plain OpenStreetMap tiles, washed out in CSS (.leaflet-tile-pane).
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="&copy; OpenStreetMap contributors"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           maxZoom={19}
         />
         <ZoomControl position="topright" />

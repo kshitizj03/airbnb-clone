@@ -6,7 +6,7 @@ from app import clock
 from app.errors import AppError
 from app.models import Listing
 
-SERVICE_FEE_RATE = Decimal("0.14")  # mock rates, see design.md section 3
+SERVICE_FEE_RATE = Decimal("0.14")  # mock rates (README: Pricing)
 TAX_RATE = Decimal("0.05")
 
 

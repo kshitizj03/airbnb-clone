@@ -1,10 +1,16 @@
 // Pure date-range rules for the calendar. Booked ranges are half open: [check_in, check_out),
 // so the night of check_in is taken but a guest may still check OUT on a booked range's check_in day.
 // Checked by date-range.check.mjs (run: npm run check:dates, needs Node 22.18+).
-import { isAfter, isBefore } from "date-fns";
+import { isAfter, isBefore, parseISO } from "date-fns";
 
 export type DateRange = { from?: Date; to?: Date };
 export type BookedRange = [Date, Date];
+
+/** Today in India (the backend's "today"), as local midnight like the calendar's days. */
+export function istToday(now: Date = new Date()): Date {
+  // en-CA formats a date as YYYY-MM-DD.
+  return parseISO(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(now));
+}
 
 /** Is the night starting on `day` already taken? */
 export const isBookedNight = (day: Date, booked: BookedRange[]): boolean =>

@@ -79,7 +79,6 @@ export function TripDetail({ id }: { id: string }) {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_400px] lg:gap-16">
         <div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={l.photos[0]} alt={l.title} className="aspect-[3/2] w-full rounded-20 bg-bebe object-cover" />
           <div className="mt-6 flex items-start justify-between gap-4">
             <div>

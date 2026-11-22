@@ -12,7 +12,7 @@ interface WhenPanelProps {
 export function WhenPanel({ value, onChange, months = 2 }: WhenPanelProps) {
   return (
     <div className="flex flex-col items-center">
-      {/* Dates | Flexible toggle (desktop only). ponytail: Flexible is not built, so it is disabled. */}
+      {/* Dates | Flexible toggle (desktop only). Limitation: Flexible is not built, so it is disabled. */}
       {months === 2 && (
         <div className="mb-4 flex rounded-pill bg-quaternary p-1 text-tab">
           <span className="rounded-pill bg-raised px-4 py-2 shadow-elevation1">Dates</span>

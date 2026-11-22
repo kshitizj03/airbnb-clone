@@ -29,7 +29,6 @@ export function PhotoMosaic({ listing, onShare }: { listing: ListingDetail; onSh
             onClick={() => openModal("photos", { photo: i })}
             className={`overflow-hidden bg-bebe ${photos.length >= 5 ? (i === 0 ? "col-span-2 row-span-2" : "") : "col-span-4 row-span-2"}`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={i === 0 ? listing.title : ""} className="size-full object-cover transition hover:brightness-90" />
           </button>
         ))}
@@ -50,7 +49,6 @@ export function PhotoMosaic({ listing, onShare }: { listing: ListingDetail; onSh
         >
           {photos.map((src, i) => (
             <button key={src} type="button" aria-label={`Open photo ${i + 1} of ${photos.length}`} onClick={() => openModal("photos", { photo: i })} className="size-full shrink-0 snap-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={src} alt={i === 0 ? listing.title : ""} className="size-full object-cover" />
             </button>
           ))}

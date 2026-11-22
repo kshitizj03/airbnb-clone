@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   if (file.size > MAX_BYTES) return error(413, "too_large", "Images can be at most 4 MB.");
   const bytes = await file.arrayBuffer();
   const kind = sniffImage(new Uint8Array(bytes));
-  // Trust neither the header nor the bytes alone: both must agree (same rule as the backend).
+  // Trust neither the declared type nor the bytes alone: both must agree.
   if (!kind || kind.type !== file.type) return error(415, "unsupported_type", "Upload a JPEG, PNG or WebP image.");
 
   const blob = await put(`listings/${crypto.randomUUID()}.${kind.ext}`, bytes, {

@@ -97,13 +97,11 @@ function Cover({ photos }: { photos: string[] }) {
   return (
     <div className="aspect-square overflow-hidden rounded-20 bg-bebe">
       {shown.length === 1 ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img src={shown[0]} alt="" className="size-full object-cover" />
       ) : (
         <div className="grid size-full grid-cols-2 grid-rows-2 gap-0.5">
           {[0, 1, 2, 3].map((i) =>
             shown[i] ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img key={i} src={shown[i]} alt="" className="size-full object-cover" />
             ) : (
               <div key={i} className="bg-bebe" />

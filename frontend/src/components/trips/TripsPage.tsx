@@ -116,7 +116,6 @@ export function TripsPage() {
 function TripCard({ trip: b }: { trip: Booking }) {
   return (
     <Link href={`/trips/${b.id}`} className="flex gap-4 rounded-20 border border-bebe p-3 hover:shadow-elevation2">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={b.listing.photos[0]} alt="" className="size-28 shrink-0 rounded-16 bg-bebe object-cover sm:size-36" />
       <div className="min-w-0 py-1">
         <StatusBadge trip={b} />

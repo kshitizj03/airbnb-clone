@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
       { source: "/api/:path*", destination: `${backend}/api/:path*` },
     ];
   },
-  images: { unoptimized: true },
   turbopack: {
     rules: {
       "*.css": {

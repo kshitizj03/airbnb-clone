@@ -96,7 +96,6 @@ export function PhotosField({ value, onChange, error }: Props) {
       <ul className="mt-6 grid grid-cols-2 gap-3">
         {value.map((src, i) => (
           <li key={src} className={`relative overflow-hidden rounded-12 bg-bebe ${i === 0 ? "col-span-2 aspect-[16/9]" : "aspect-[4/3]"}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={`Photo ${i + 1}`} className="size-full object-cover" />
             {i === 0 && <span className="absolute top-3 left-3 rounded-pill bg-elevated px-3 py-1 text-label shadow-elevation1">Cover Photo</span>}
             <div className="absolute right-3 bottom-3 flex gap-2">

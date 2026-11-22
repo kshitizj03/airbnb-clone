@@ -292,7 +292,6 @@ function CheckoutBody({ listing }: { listing: ListingDetail }) {
       {/* ---------- Right: summary ---------- */}
       <aside className="order-1 h-fit rounded-16 border border-deco p-6 lg:sticky lg:top-24 lg:order-2">
         <div className="flex gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={listing.photos[0]} alt="" className="size-24 shrink-0 rounded-12 bg-bebe object-cover" />
           <div className="min-w-0">
             <p className="text-card">{listing.title}</p>

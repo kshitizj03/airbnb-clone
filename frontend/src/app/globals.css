@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Design tokens from docs/airbnb-ui-spec.md section 1. */
+/* Design tokens: colours, type scale, radii and shadows. */
 @theme {
   /* Plus Jakarta Sans stands in for Airbnb Cereal, same fallbacks. */
   --font-sans: var(--font-cereal), Circular, -apple-system, BlinkMacSystemFont, Roboto,
@@ -177,7 +177,7 @@ body {
   animation: shimmer 1.6s linear infinite;
 }
 
-/* Date range calendar: react-day-picker restyled to Airbnb (spec section 2, When panel). */
+/* Date range calendar: react-day-picker restyled to Airbnb (search When panel and listing calendar). */
 .airbnb-cal.rdp-root {
   --rdp-accent-color: var(--color-hof);
   --rdp-accent-background-color: var(--color-faint);
