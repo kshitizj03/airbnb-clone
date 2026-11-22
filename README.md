@@ -1,5 +1,7 @@
 # Airbnb clone
 
+[![CI](https://github.com/kshitizj03/airbnb-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/kshitizj03/airbnb-clone/actions/workflows/ci.yml)
+
 An Airbnb-style stays marketplace: search with dates and filters, listing pages with a calendar and a live price quote, bookings with double-booking protection, wishlists, and a host dashboard with a listing editor. Next.js frontend, FastAPI backend, SQLite database.
 
 A personal project: a full-stack clone of Airbnb built from scratch. The UI look and copy mirror Airbnb on purpose; no Airbnb assets (logo files, images) are copied, and the project is not affiliated with Airbnb.
