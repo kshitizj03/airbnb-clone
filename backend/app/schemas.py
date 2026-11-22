@@ -196,8 +196,8 @@ class BookingOut(BaseModel):
 
 
 def _photo_url(url: str) -> str:
-    if not url.startswith(("http://", "https://", "/uploads/")):
-        raise ValueError("Must start with http://, https:// or /uploads/.")
+    if not url.startswith(("http://", "https://")):
+        raise ValueError("Must start with http:// or https://.")
     return url
 
 

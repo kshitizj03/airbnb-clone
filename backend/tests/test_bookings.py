@@ -57,7 +57,9 @@ def test_book_overlap_409(client, db):
     _error(client.post("/api/bookings", json=_body(listing, 12, 3)), 409, "dates_unavailable")
 
 
-def test_concurrent_double_booking_only_one_wins(client, db):
+def test_concurrent_double_booking_only_one_wins(client, db, monkeypatch):
+    # Skip the friendly pre-check so both requests insert: the exclusion constraint must decide.
+    monkeypatch.setattr("app.routers.bookings.has_overlap", lambda *args: False)
     host = make_user(db, "h@x.com", is_host=True)
     make_user(db, "a@x.com")
     make_user(db, "b@x.com")

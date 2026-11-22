@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Response
+from psycopg import errors
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -15,8 +16,8 @@ from app.security import current_user
 
 router = APIRouter(prefix="/api/wishlists", tags=["wishlists"])
 
-# The server's func.now() only has 1-second resolution, so "most recent" would tie within a
-# second. Timestamps are set from Python (microseconds) and ties are broken by id.
+# func.now() is the transaction's start time, so "most recent" could tie. Timestamps are set
+# from Python (microseconds) and ties are broken by id.
 _newest_first = (Wishlist.updated_at.desc(), Wishlist.id.desc())
 
 
@@ -115,8 +116,10 @@ def save_item(wishlist_id: int, body: SaveIn, db: Session = Depends(get_db),
     get_live_listing(db, body.listing_id)
     try:
         _save(db, wishlist, body.listing_id)
-    except IntegrityError:  # a concurrent request saved it first: already saved, so still 200
+    except IntegrityError as e:  # a concurrent request saved it first: already saved, so still 200
         db.rollback()
+        if not isinstance(e.orig, errors.UniqueViolation):
+            raise
     out = _outs(db, [wishlist])[0]
     db.commit()
     return out

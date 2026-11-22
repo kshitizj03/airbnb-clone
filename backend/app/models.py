@@ -1,9 +1,10 @@
 from datetime import date, datetime
 
 from sqlalchemy import (
-    Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey, Index, Integer, String, Table,
-    Text, func,
+    DDL, Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey, Index, Integer, String,
+    Table, Text, event, false, func, text,
 )
+from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -25,7 +26,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String)
     avatar_url: Mapped[str | None] = mapped_column(String)
     bio: Mapped[str | None] = mapped_column(Text)
-    is_host: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    is_host: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
@@ -113,6 +114,11 @@ class Booking(Base):
         CheckConstraint("status IN ('confirmed','cancelled')", name="ck_booking_status"),
         Index("ix_bookings_listing_dates", "listing_id", "check_in", "check_out"),
         Index("ix_bookings_guest_id", "guest_id"),
+        # No two confirmed stays on one listing may share a night (check-out day is free).
+        ExcludeConstraint(
+            ("listing_id", "="), (text("daterange(check_in, check_out, '[)')"), "&&"),
+            name="ex_booking_overlap", using="gist", where=text("status = 'confirmed'"),
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -135,6 +141,11 @@ class Booking(Base):
 
     listing: Mapped[Listing] = relationship()
     guest: Mapped[User] = relationship()
+
+
+# The exclusion constraint mixes = on an integer with && on a range, which needs btree_gist.
+event.listen(Booking.__table__, "before_create",
+             DDL("CREATE EXTENSION IF NOT EXISTS btree_gist"))
 
 
 class Review(Base):

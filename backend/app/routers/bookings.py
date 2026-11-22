@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from psycopg import errors
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -52,8 +53,7 @@ def create_booking(body: BookingIn, db: Session = Depends(get_db),
                   body.infants, body.pets)
     if listing.host_id == user.id:
         raise AppError(403, "own_listing", "You cannot book your own listing.")
-    # The transaction began with BEGIN IMMEDIATE (db.py), so no other writer can insert between
-    # this check and the commit below: the check and the insert are atomic.
+    # Friendly early answer; the exclusion constraint (models.py) is what makes it race-proof.
     if has_overlap(db, listing.id, body.check_in, body.check_out):
         raise AppError(409, "dates_unavailable", "Those dates are already booked.")
     q = quote(listing.price_per_night, listing.cleaning_fee, body.check_in, body.check_out)
@@ -63,7 +63,13 @@ def create_booking(body: BookingIn, db: Session = Depends(get_db),
                       nightly_price=q.nightly_price, cleaning_fee=q.cleaning_fee,
                       service_fee=q.service_fee, taxes=q.taxes, total=q.total)  # snapshot
     db.add(booking)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as e:  # a concurrent booking took these nights after our check
+        db.rollback()
+        if not isinstance(e.orig, errors.ExclusionViolation):
+            raise
+        raise AppError(409, "dates_unavailable", "Those dates are already booked.")
     return _out(booking, _cards(db, {listing.id})[listing.id])
 
 
@@ -110,7 +116,9 @@ def review_stay(booking_id: int, body: ReviewIn, db: Session = Depends(get_db),
     db.add(review)
     try:
         db.commit()
-    except IntegrityError:  # reviews.booking_id is unique: the database is the one check
+    except IntegrityError as e:  # reviews.booking_id is unique: the database is the one check
         db.rollback()
+        if not isinstance(e.orig, errors.UniqueViolation):
+            raise
         raise AppError(409, "already_reviewed", "You have already reviewed this stay.")
     return review_out(review)

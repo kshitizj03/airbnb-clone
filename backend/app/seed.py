@@ -1,4 +1,6 @@
-"""Demo data. `seed(db)` is a no-op if any user exists; `python -m app.seed --reset` rebuilds."""
+"""Schema and demo data: `python -m app.seed` creates missing tables (and the btree_gist extension)
+and seeds an empty database; `--reset` drops every table first. `seed(db)` is a no-op if any user
+exists."""
 import random
 import sys
 from datetime import datetime, time, timedelta

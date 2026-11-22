@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Response
+from psycopg import errors
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -25,8 +26,10 @@ def signup(body: SignupIn, response: Response, db: Session = Depends(get_db)):
     db.add(user)
     try:
         db.commit()
-    except IntegrityError:  # a concurrent signup took the email after our check
+    except IntegrityError as e:  # a concurrent signup took the email after our check
         db.rollback()
+        if not isinstance(e.orig, errors.UniqueViolation):
+            raise
         raise AppError(409, "email_taken", "An account with this email already exists.")
     issue_cookie(response, user.id)
     return user

@@ -1,4 +1,3 @@
-import re
 from datetime import timedelta
 
 from sqlalchemy import select
@@ -7,7 +6,6 @@ from app.clock import today
 from app.models import Amenity, Listing, ListingPhoto
 from tests.factories import make_booking, make_listing, make_user
 
-JPEG = b"\xff\xd8\xff\xe0" + b"0" * 100
 PHOTO = "https://images.unsplash.com/photo-new?w=1200"
 
 
@@ -102,7 +100,7 @@ def test_patch_updates_fields_and_amenities(client, db):
 
 def test_patch_replaces_photos_in_order(client, db):
     _, listing = _host_setup(db, client)
-    urls = ["https://a.test/1.jpg", "/uploads/two.jpg", "https://a.test/3.jpg"]
+    urls = ["https://a.test/1.jpg", "https://a.test/2.jpg", "https://a.test/3.jpg"]
     r = client.patch(f"/api/listings/{listing.id}", json={"photo_urls": urls})
     assert r.status_code == 200, r.text
     assert r.json()["photos"] == urls
@@ -128,7 +126,6 @@ def test_delete_soft_deletes_and_second_call_404(client, db):
     assert client.delete(f"/api/listings/{listing.id}").status_code == 204
     db.expire_all()
     assert db.get(Listing, listing.id).deleted_at is not None
-    db.commit()  # release the write lock the read took (every transaction is BEGIN IMMEDIATE)
     _error(client.delete(f"/api/listings/{listing.id}"), 404, "listing_not_found")
     _error(client.patch(f"/api/listings/{listing.id}", json={"title": "x"}),
            404, "listing_not_found")
@@ -154,55 +151,6 @@ def test_quote_rejects_negative_counts(client, db):
     base = f"/api/listings/{listing.id}/quote?check_in={d}&check_out={d + timedelta(days=2)}"
     for param in ("children=-1", "infants=-1", "pets=-1", "adults=0"):
         _error(client.get(f"{base}&{param}"), 422, "validation_error")
-
-
-def _upload(client, data, name="pic.jpg", ctype="image/jpeg"):
-    return client.post("/api/uploads", files={"file": (name, data, ctype)})
-
-
-def test_upload_requires_login(client):
-    _error(_upload(client, JPEG), 401, "not_authenticated")
-
-
-def test_upload_rejects_non_image_415(client, db):
-    make_user(db, "n@x.com")
-    _login(client, "n@x.com")
-    _error(_upload(client, b"just some text, not an image"), 415, "unsupported_type")
-    _error(_upload(client, JPEG, "pic.gif", "image/gif"), 415, "unsupported_type")
-    png_claiming_jpeg = b"\x89PNG\r\n\x1a\n" + b"0" * 50
-    _error(_upload(client, png_claiming_jpeg), 415, "unsupported_type")
-
-
-def test_upload_rejects_over_5mb_413(client, db, upload_dir):
-    make_user(db, "n@x.com")
-    _login(client, "n@x.com")
-    _error(_upload(client, JPEG + b"0" * (5 * 1024 * 1024)), 413, "too_large")
-    assert not list(upload_dir.glob("*"))
-
-
-def test_upload_missing_file_422(client, db):
-    make_user(db, "n@x.com")
-    _login(client, "n@x.com")
-    assert client.post("/api/uploads").status_code == 422
-
-
-def test_upload_saves_random_name(client, db, upload_dir):
-    make_user(db, "n@x.com")
-    _login(client, "n@x.com")
-    r = _upload(client, JPEG, name="../../evil.png")
-    assert r.status_code == 201, r.text
-    url = r.json()["url"]
-    assert re.fullmatch(r"/uploads/[0-9a-f]{32}\.jpg", url)  # ext from sniffed type, not client
-    assert (upload_dir / url.rsplit("/", 1)[1]).read_bytes() == JPEG
-    assert client.get(url).content == JPEG  # served by the static mount
-
-
-def test_upload_accepts_png_and_webp(client, db):
-    make_user(db, "n@x.com")
-    _login(client, "n@x.com")
-    png = _upload(client, b"\x89PNG\r\n\x1a\n" + b"0" * 20, "a.png", "image/png")
-    webp = _upload(client, b"RIFF\x00\x00\x00\x00WEBPVP8 ", "a.webp", "image/webp")
-    assert png.json()["url"].endswith(".png") and webp.json()["url"].endswith(".webp")
 
 
 def test_host_listings_with_upcoming_counts(client, db):

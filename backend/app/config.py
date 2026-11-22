@@ -1,19 +1,21 @@
+import re
 from functools import lru_cache
-from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "sqlite:///./app.db"
-    upload_dir: str = "./uploads"
+    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/airbnb"
     jwt_secret: str = "dev-secret-change-me-dev-secret-change-me"
     cookie_secure: bool = False
     demo_password: str = "demo-password-123"
-    # WAL needs shared memory on one host, so use DELETE on network file shares (Azure Files).
-    sqlite_journal_mode: Literal["WAL", "DELETE"] = "WAL"
-    # How long a transaction waits for the write lock before "database is locked".
-    sqlite_busy_timeout_s: float = 15.0
+
+    @field_validator("database_url")
+    @classmethod
+    def _use_psycopg(cls, url: str) -> str:
+        # Neon and Vercel hand out postgres:// URLs; SQLAlchemy needs the driver named.
+        return re.sub(r"^postgres(ql)?://", "postgresql+psycopg://", url)
 
 
 @lru_cache

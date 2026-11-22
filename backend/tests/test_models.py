@@ -2,6 +2,7 @@ import statistics
 from datetime import date
 
 import pytest
+from psycopg import errors
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
@@ -16,6 +17,19 @@ def test_booking_requires_checkout_after_checkin(db):
     listing = make_listing(db, host)
     with pytest.raises(IntegrityError):
         make_booking(db, listing, guest, date(2027, 1, 5), date(2027, 1, 5))
+
+
+def test_confirmed_stays_cannot_overlap(db):
+    # Straight to the database, past the API's pre-check: the exclusion constraint is the guard.
+    host, guest = make_user(db, "h@x.com"), make_user(db, "g@x.com")
+    listing = make_listing(db, host)
+    make_booking(db, listing, guest, date(2027, 1, 5), date(2027, 1, 8))
+    make_booking(db, listing, guest, date(2027, 1, 6), date(2027, 1, 7), status="cancelled")
+    make_booking(db, listing, guest, date(2027, 1, 8), date(2027, 1, 10))  # back to back
+    make_booking(db, make_listing(db, host), guest, date(2027, 1, 5), date(2027, 1, 8))
+    with pytest.raises(IntegrityError) as err:
+        make_booking(db, listing, guest, date(2027, 1, 7), date(2027, 1, 9))
+    assert isinstance(err.value.orig, errors.ExclusionViolation)
 
 
 def _review(booking):

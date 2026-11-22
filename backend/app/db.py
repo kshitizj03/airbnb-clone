@@ -1,7 +1,6 @@
 from collections.abc import Iterator
 
-from sqlalchemy import create_engine, event
-from sqlalchemy.engine import Engine
+from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.config import get_settings
@@ -11,36 +10,7 @@ class Base(DeclarativeBase):
     pass
 
 
-def make_engine(
-    url: str, journal_mode: str | None = None, busy_timeout_s: float | None = None
-) -> Engine:
-    settings = get_settings()
-    journal_mode = journal_mode or settings.sqlite_journal_mode
-    if busy_timeout_s is None:
-        busy_timeout_s = settings.sqlite_busy_timeout_s
-    engine = create_engine(
-        url, connect_args={"check_same_thread": False, "timeout": busy_timeout_s}
-    )
-
-    @event.listens_for(engine, "connect")
-    def on_connect(dbapi_connection, _record):
-        # Take over transaction control from pysqlite (SQLAlchemy's documented recipe).
-        dbapi_connection.isolation_level = None
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.execute(f"PRAGMA journal_mode={journal_mode}")
-        cursor.close()
-
-    @event.listens_for(engine, "begin")
-    def on_begin(conn):
-        # ponytail: serializes all transactions, fine for one worker;
-        # per-route locking if read concurrency ever matters.
-        conn.exec_driver_sql("BEGIN IMMEDIATE")
-
-    return engine
-
-
-engine = make_engine(get_settings().database_url)
+engine = create_engine(get_settings().database_url, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 
