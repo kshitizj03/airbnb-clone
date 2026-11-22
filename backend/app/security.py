@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 import jwt
@@ -28,14 +28,20 @@ COOKIE_NAME = "session"
 COOKIE_DAYS = 30
 
 
+def _cookie_flags() -> dict:
+    """Set and delete use the same flags, or the browser keeps the old cookie."""
+    return {"httponly": True, "samesite": "lax", "secure": get_settings().cookie_secure}
+
+
 def issue_cookie(response: Response, user_id: int) -> None:
-    settings = get_settings()
-    exp = datetime.now(timezone.utc) + timedelta(days=COOKIE_DAYS)
-    token = jwt.encode({"sub": str(user_id), "exp": exp}, settings.jwt_secret, algorithm="HS256")
-    response.set_cookie(
-        COOKIE_NAME, token, max_age=COOKIE_DAYS * 86400,
-        httponly=True, samesite="lax", secure=settings.cookie_secure,
-    )
+    exp = datetime.now(UTC) + timedelta(days=COOKIE_DAYS)
+    token = jwt.encode({"sub": str(user_id), "exp": exp}, get_settings().jwt_secret,
+                       algorithm="HS256")
+    response.set_cookie(COOKIE_NAME, token, max_age=COOKIE_DAYS * 86400, **_cookie_flags())
+
+
+def clear_cookie(response: Response) -> None:
+    response.delete_cookie(COOKIE_NAME, **_cookie_flags())
 
 
 def optional_user(request: Request, db: Session = Depends(get_db)) -> User | None:
@@ -43,10 +49,11 @@ def optional_user(request: Request, db: Session = Depends(get_db)) -> User | Non
     if not token:
         return None
     try:
-        payload = jwt.decode(token, get_settings().jwt_secret, algorithms=["HS256"])
+        payload = jwt.decode(token, get_settings().jwt_secret, algorithms=["HS256"],
+                             options={"require": ["exp", "sub"]})
         return db.get(User, int(payload["sub"]))
-    except (jwt.InvalidTokenError, KeyError, ValueError):
-        return None  # bad or expired token behaves like no token
+    except (jwt.InvalidTokenError, ValueError):
+        return None  # bad, expired or incomplete token behaves like no token
 
 
 def current_user(user: User | None = Depends(optional_user)) -> User:

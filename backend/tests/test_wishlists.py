@@ -96,6 +96,8 @@ def test_name_over_50_chars_422(client, db):
     _setup(db, client)
     assert client.post("/api/wishlists", json={"name": "x" * 51}).status_code == 422
     assert client.post("/api/wishlists", json={"name": "   "}).status_code == 422
+    r = client.post("/api/wishlists", json={"name": "  Goa  "})
+    assert r.status_code == 201 and r.json()["name"] == "Goa"
 
 
 def test_deleted_listing_hidden_and_cannot_be_saved(client, db):

@@ -1,9 +1,33 @@
 from datetime import date, datetime
 from typing import Annotated, Generic, Literal, TypeVar
+from urllib.parse import urlsplit
 
 from pydantic import (
-    AfterValidator, BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator,
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    StringConstraints,
+    field_validator,
 )
+
+DB_INT_MAX = 2**31 - 1  # Postgres integer; a bigger id or count must fail here, not in SQL
+Id = Annotated[int, Field(ge=1, le=DB_INT_MAX)]  # path, query and body ids
+
+MAX_PRICE = 1_000_000  # rupees, for the nightly price and the cleaning fee
+MAX_GUESTS = 16  # adults + children; infants and pets are counted separately
+MAX_INFANTS = 5
+MAX_PETS = 5
+
+
+def _text(max_length: int):
+    """Trimmed text that must not be blank."""
+    return Annotated[str, StringConstraints(strip_whitespace=True, min_length=1,
+                                            max_length=max_length)]
+
+
+Name = _text(100)
 
 
 class UserOut(BaseModel):
@@ -17,7 +41,7 @@ class UserOut(BaseModel):
 
 
 class SignupIn(BaseModel):
-    name: str = Field(min_length=1)
+    name: Name
     email: EmailStr
     password: str = Field(min_length=8)
 
@@ -139,7 +163,7 @@ class ReviewIn(BaseModel):
     communication: Score
     location: Score
     value: Score
-    comment: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
+    comment: _text(1000)
 
 
 class DestinationOut(BaseModel):
@@ -160,13 +184,13 @@ class PriceQuoteOut(BaseModel):
 
 
 class BookingIn(BaseModel):
-    listing_id: int
+    listing_id: Id
     check_in: date
     check_out: date
-    adults: int = 1
-    children: int = Field(0, ge=0)
-    infants: int = Field(0, ge=0)
-    pets: int = Field(0, ge=0)
+    adults: int = Field(1, le=MAX_GUESTS)  # validate_stay gives "no_adults" for < 1
+    children: int = Field(0, ge=0, le=MAX_GUESTS)
+    infants: int = Field(0, ge=0, le=MAX_INFANTS)
+    pets: int = Field(0, ge=0, le=MAX_PETS)
 
 
 class GuestOut(BaseModel):
@@ -196,23 +220,31 @@ class BookingOut(BaseModel):
 
 
 def _photo_url(url: str) -> str:
-    if not url.startswith(("http://", "https://")):
-        raise ValueError("Must start with http:// or https://.")
+    """Photos are seeded Unsplash images or uploads to our Vercel Blob store, nothing else.
+    lib/listing-draft.ts (isPhotoUrl) applies the same rule in the browser."""
+    parts = urlsplit(url)
+    host = parts.hostname or ""
+    if parts.scheme != "https" or not (
+            host == "images.unsplash.com" or host.endswith(".public.blob.vercel-storage.com")):
+        raise ValueError("Use an https link from images.unsplash.com, or upload the photo.")
     return url
 
 
-# Field types shared by create and patch, so the limits are written once.
-Title = Annotated[str, Field(min_length=1, max_length=50)]
-Description = Annotated[str, Field(min_length=1, max_length=500)]
-Text = Annotated[str, Field(min_length=1)]
+# Field types shared by create and patch, so the limits are written once (same as the UI's).
+Title = _text(50)
+Description = _text(500)
+Place = _text(120)  # address, city, state, country
+Latitude = Annotated[float, Field(ge=-90, le=90)]  # range checks also reject NaN
+Longitude = Annotated[float, Field(ge=-180, le=180)]
 PropertyType = Literal["house", "flat", "guest_house", "hotel"]
 PlaceType = Literal["entire_home", "private_room", "shared_room"]
-Price = Annotated[int, Field(gt=0, le=1_000_000)]
-Fee = Annotated[int, Field(ge=0)]
-Guests = Annotated[int, Field(ge=1, le=16)]
+Price = Annotated[int, Field(gt=0, le=MAX_PRICE)]
+Fee = Annotated[int, Field(ge=0, le=MAX_PRICE)]
+Guests = Annotated[int, Field(ge=1, le=MAX_GUESTS)]
 Bedrooms = Annotated[int, Field(ge=0, le=50)]
 Count = Annotated[int, Field(ge=1, le=50)]
-PhotoUrls = Annotated[list[Annotated[str, AfterValidator(_photo_url)]],
+PhotoUrls = Annotated[list[Annotated[str, StringConstraints(strip_whitespace=True, max_length=2048),
+                                     AfterValidator(_photo_url)]],
                       Field(min_length=1, max_length=20)]
 
 
@@ -221,12 +253,12 @@ class ListingIn(BaseModel):
     description: Description
     property_type: PropertyType
     place_type: PlaceType
-    address: Text
-    city: Text
-    state: Text
-    country: Text
-    latitude: float
-    longitude: float
+    address: Place
+    city: Place
+    state: Place
+    country: Place
+    latitude: Latitude
+    longitude: Longitude
     price_per_night: Price
     cleaning_fee: Fee
     max_guests: Guests
@@ -244,12 +276,12 @@ class ListingPatch(BaseModel):
     description: Description | None = None
     property_type: PropertyType | None = None
     place_type: PlaceType | None = None
-    address: Text | None = None
-    city: Text | None = None
-    state: Text | None = None
-    country: Text | None = None
-    latitude: float | None = None
-    longitude: float | None = None
+    address: Place | None = None
+    city: Place | None = None
+    state: Place | None = None
+    country: Place | None = None
+    latitude: Latitude | None = None
+    longitude: Longitude | None = None
     price_per_night: Price | None = None
     cleaning_fee: Fee | None = None
     max_guests: Guests | None = None
@@ -263,17 +295,12 @@ class ListingPatch(BaseModel):
 
 
 class WishlistIn(BaseModel):
-    name: Annotated[str, Field(min_length=1, max_length=50)]
-    listing_id: int | None = None
-
-    @field_validator("name", mode="before")
-    @classmethod
-    def trim(cls, v):
-        return v.strip() if isinstance(v, str) else v
+    name: _text(50)  # the create-wishlist modal's limit
+    listing_id: Id | None = None
 
 
 class SaveIn(BaseModel):
-    listing_id: int
+    listing_id: Id
 
 
 class WishlistOut(BaseModel):

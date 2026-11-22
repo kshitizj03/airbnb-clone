@@ -1,4 +1,5 @@
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
@@ -65,19 +66,18 @@ def test_concurrent_double_booking_only_one_wins(client, db, monkeypatch):
     make_user(db, "b@x.com")
     listing = make_listing(db, host)
     body = _body(listing, 20, 4)
-    barrier, statuses = threading.Barrier(2), []
+    barrier = threading.Barrier(2, timeout=10)  # a stuck partner fails the test, not hangs it
 
     def attempt(email):
         with TestClient(client.app) as c:
             _login(c, email)
             barrier.wait()
-            statuses.append(c.post("/api/bookings", json=body).status_code)
+            return c.post("/api/bookings", json=body).status_code
 
-    threads = [threading.Thread(target=attempt, args=(e,)) for e in ("a@x.com", "b@x.com")]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    with ThreadPoolExecutor(2) as pool:
+        futures = [pool.submit(attempt, e) for e in ("a@x.com", "b@x.com")]
+        # result() re-raises a thread's exception here, and gives up after the timeout.
+        statuses = [f.result(timeout=30) for f in futures]
     assert sorted(statuses) == [201, 409]
 
 
@@ -89,6 +89,16 @@ def test_book_today_in_ist_when_utc_is_yesterday(client, db, monkeypatch):
             "check_out": (ist_today + timedelta(days=1)).isoformat()}
     r = client.post("/api/bookings", json=body)
     assert r.status_code == 201, r.text
+
+
+def test_oversized_guest_counts_422_not_500(client, db):
+    _, _, listing = _setup(db, client, pets_allowed=True)
+    for extra in ({"infants": 10**12}, {"pets": 10**12}, {"infants": 6}, {"adults": 17},
+                  {"children": 10**20}):
+        _error(client.post("/api/bookings", json=_body(listing, 5, 2, **extra)),
+               422, "validation_error")
+    ok = client.post("/api/bookings", json=_body(listing, 5, 2, infants=5, pets=5))
+    assert ok.status_code == 201, ok.text
 
 
 def test_past_dates_422(client, db):
@@ -200,7 +210,8 @@ def test_quote_endpoint_returns_409_when_booked(client, db):
     _error(client.get(f"/api/listings/{listing.id}/quote", params=params), 409, "dates_unavailable")
 
 
-SCORES = dict(rating=4, cleanliness=5, accuracy=4, checkin=5, communication=5, location=4, value=4)
+SCORES = {"rating": 4, "cleanliness": 5, "accuracy": 4, "checkin": 5, "communication": 5,
+          "location": 4, "value": 4}
 
 
 def _past_stay(db, client, **booking_overrides):

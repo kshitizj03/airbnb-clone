@@ -14,9 +14,7 @@ from app.db import Base, SessionLocal, engine
 from app.models import Amenity, Booking, Listing, ListingPhoto, Review, User
 from app.pricing import quote
 from app.security import hash_password
-from app.seed_data import (
-    AMENITIES, CITIES, DESCRIPTIONS, GUESTS, HOSTS, PHOTOS, REVIEW_COMMENTS,
-)
+from app.seed_data import AMENITIES, CITIES, DESCRIPTIONS, GUESTS, HOSTS, PHOTOS, REVIEW_COMMENTS
 
 N_FUTURE_BOOKINGS = 20
 
@@ -109,6 +107,10 @@ def seed(db: Session) -> None:
     for review in demo_reviews[-3:]:
         review.listing.reviews.remove(review)  # else the listing would save it again
         db.expunge(review)
+    # The session numbers pending objects by its pending count, which the expunge just lowered,
+    # so objects added from here would tie with earlier ones and get ids in set order. Flushing
+    # first keeps the ids the same on every run.
+    db.flush()
 
     # Future stays on distinct listings (one each), so they cannot overlap either.
     for listing in rng.sample(listings, N_FUTURE_BOOKINGS):

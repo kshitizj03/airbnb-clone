@@ -53,7 +53,15 @@ export type Basics = Pick<Draft, "max_guests" | "bedrooms" | "beds" | "bathrooms
 export type Pricing = Pick<Draft, "price_per_night" | "cleaning_fee" | "instant_book" | "pets_allowed">;
 
 export const MAX_PRICE = 1_000_000;
-export const isPhotoUrl = (u: string) => /^https?:\/\/\S+$/i.test(u);
+/** Same rule as the API (backend/app/schemas.py): https photos from Unsplash or our Vercel Blob store. */
+export function isPhotoUrl(u: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(u);
+    return protocol === "https:" && (hostname === "images.unsplash.com" || hostname.endsWith(".public.blob.vercel-storage.com"));
+  } catch {
+    return false;
+  }
+}
 
 export type SectionId = "type" | "location" | "basics" | "amenities" | "photos" | "title" | "description" | "pricing";
 

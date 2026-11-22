@@ -1,13 +1,15 @@
+import hashlib
 import statistics
 from datetime import date
 
 import pytest
 from psycopg import errors
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
 
 from app.clock import today
-from app.models import Booking, Listing, Review, User
+from app.db import Base
+from app.models import Booking, Listing, ListingPhoto, Review, User, listing_amenities
 from app.seed import seed
 from tests.factories import make_booking, make_listing, make_user
 
@@ -71,7 +73,47 @@ def test_listing_checks(db):
         make_listing(db, host, property_type="castle")
 
 
-def test_seed_is_deterministic_and_complete(db):
+def test_photo_positions_are_unique_per_listing(db):
+    host = make_user(db, "h@x.com")
+    listing = make_listing(db, host)  # has a photo at position 0
+    db.add(ListingPhoto(listing_id=listing.id, url="https://images.unsplash.com/b", position=0))
+    with pytest.raises(IntegrityError) as err:
+        db.commit()
+    assert isinstance(err.value.orig, errors.UniqueViolation)
+
+
+def _seed_digest(db) -> str:
+    """A stable fingerprint of the seeded rows that matter, ordered by id."""
+    rows = [
+        db.execute(select(User.id, User.email, User.name, User.is_host).order_by(User.id)).all(),
+        db.execute(select(Listing.id, Listing.host_id, Listing.title, Listing.city,
+                          Listing.latitude, Listing.longitude, Listing.price_per_night,
+                          Listing.cleaning_fee, Listing.max_guests, Listing.bedrooms,
+                          Listing.beds, Listing.bathrooms).order_by(Listing.id)).all(),
+        db.execute(select(ListingPhoto.listing_id, ListingPhoto.position, ListingPhoto.url)
+                   .order_by(ListingPhoto.listing_id, ListingPhoto.position)).all(),
+        db.execute(select(listing_amenities).order_by(*listing_amenities.c)).all(),
+        db.execute(select(Booking.id, Booking.listing_id, Booking.guest_id, Booking.check_in,
+                          Booking.check_out, Booking.adults, Booking.total)
+                   .order_by(Booking.id)).all(),
+        db.execute(select(Review.booking_id, Review.rating, Review.cleanliness, Review.value,
+                          Review.comment).order_by(Review.booking_id)).all(),
+    ]
+    return hashlib.sha256(repr(rows).encode()).hexdigest()
+
+
+def test_seed_is_deterministic(db):
+    seed(db)
+    first = _seed_digest(db)
+    tables = ", ".join(t.name for t in Base.metadata.sorted_tables)
+    db.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))  # a fresh, empty schema
+    db.commit()
+    db.expunge_all()  # forget the first run's objects; the new rows reuse their ids
+    seed(db)
+    assert _seed_digest(db) == first
+
+
+def test_seed_is_complete(db):
     seed(db)
     assert db.scalar(select(func.count(Listing.id))) >= 78
     assert db.scalar(select(func.count(User.id))) == 10

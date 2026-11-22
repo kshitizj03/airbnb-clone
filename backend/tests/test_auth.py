@@ -1,5 +1,13 @@
+from datetime import UTC, datetime, timedelta
+
+import jwt
+import pytest
+from fastapi.testclient import TestClient
+from pydantic import ValidationError
 from sqlalchemy import select
 
+from app.config import DEV_JWT_SECRET, Settings, get_settings
+from app.db import get_db
 from app.models import User
 from tests.factories import make_user
 
@@ -109,3 +117,58 @@ def test_signup_race_duplicate_is_409(client, monkeypatch):
     r = client.post("/api/auth/signup", json=SIGNUP)
     assert r.status_code == 409
     assert r.json()["error"]["code"] == "email_taken"
+
+
+def test_blank_name_422_and_name_is_trimmed(client):
+    r = client.post("/api/auth/signup", json={**SIGNUP, "name": "   "})
+    assert r.status_code == 422 and "name" in r.json()["error"]["fields"]
+    r = client.post("/api/auth/signup", json={**SIGNUP, "name": "  Asha  "})
+    assert r.status_code == 201 and r.json()["name"] == "Asha"
+
+
+def _token(**claims):
+    return jwt.encode(claims, get_settings().jwt_secret, algorithm="HS256")
+
+
+def test_token_without_exp_or_sub_is_rejected(client, db):
+    user = make_user(db, email="u@x.com")
+    client.cookies.set("session", _token(sub=str(user.id)))  # validly signed, never expires
+    assert client.get("/api/auth/me").status_code == 401
+    exp = datetime.now(UTC) + timedelta(days=1)
+    client.cookies.set("session", _token(exp=exp))
+    assert client.get("/api/auth/me").status_code == 401
+    client.cookies.set("session", _token(sub=str(user.id), exp=exp))
+    assert client.get("/api/auth/me").status_code == 200
+
+
+def _cleared(r) -> bool:
+    cookie = r.headers.get("set-cookie", "")
+    return cookie.startswith("session=") and "Max-Age=0" in cookie and "HttpOnly" in cookie
+
+
+def test_logout_without_or_with_expired_session_is_204_and_clears(client, db):
+    r = client.post("/api/auth/logout")
+    assert r.status_code == 204 and _cleared(r)
+    user = make_user(db, email="u@x.com")
+    client.cookies.set("session", _token(sub=str(user.id),
+                                         exp=datetime.now(UTC) - timedelta(minutes=1)))
+    r = client.post("/api/auth/logout")
+    assert r.status_code == 204 and _cleared(r)
+
+
+def test_dev_jwt_secret_refused_with_secure_cookies():
+    with pytest.raises(ValidationError):
+        Settings(cookie_secure=True, jwt_secret=DEV_JWT_SECRET)
+    assert Settings(cookie_secure=True, jwt_secret="a-real-secret").cookie_secure
+    assert not Settings(cookie_secure=False, jwt_secret=DEV_JWT_SECRET).cookie_secure
+
+
+def test_unexpected_error_is_json_500(client):
+    def broken_db():
+        raise RuntimeError("database exploded")
+
+    client.app.dependency_overrides[get_db] = broken_db
+    with TestClient(client.app, raise_server_exceptions=False) as c:
+        r = c.get("/api/amenities")
+    assert r.status_code == 500
+    assert r.json() == {"error": {"code": "internal_error", "message": "Something went wrong."}}

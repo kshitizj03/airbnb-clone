@@ -1,8 +1,23 @@
 from datetime import date, datetime
 
 from sqlalchemy import (
-    DDL, Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey, Index, Integer, String,
-    Table, Text, event, false, func, text,
+    DDL,
+    Boolean,
+    CheckConstraint,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+    event,
+    false,
+    func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -85,6 +100,12 @@ class Listing(Base):
 
 class ListingPhoto(Base):
     __tablename__ = "listing_photos"
+    __table_args__ = (
+        # Checked at commit, so replacing or reordering a listing's photos in one transaction
+        # can briefly hold two rows at one position (a flush inserts before it deletes).
+        UniqueConstraint("listing_id", "position", name="uq_listing_photo_position",
+                         deferrable=True, initially="DEFERRED"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     listing_id: Mapped[int] = mapped_column(ForeignKey("listings.id", ondelete="CASCADE"))
@@ -150,10 +171,11 @@ event.listen(Booking.__table__, "before_create",
 
 class Review(Base):
     __tablename__ = "reviews"
-    __table_args__ = tuple(
-        CheckConstraint(f"{col} BETWEEN 1 AND 5", name=f"ck_review_{col}")
-        for col in ("rating", "cleanliness", "accuracy", "checkin", "communication", "location",
-                    "value")
+    __table_args__ = (
+        *(CheckConstraint(f"{col} BETWEEN 1 AND 5", name=f"ck_review_{col}")
+          for col in ("rating", "cleanliness", "accuracy", "checkin", "communication", "location",
+                      "value")),
+        Index("ix_reviews_listing_id", "listing_id"),  # listing pages and rating stats
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Response
 from psycopg import errors
@@ -11,13 +11,14 @@ from app.db import get_db
 from app.errors import AppError
 from app.models import Listing, ListingPhoto, User, Wishlist, WishlistItem
 from app.routers.listings import get_live_listing
-from app.schemas import SaveIn, WishlistDetail, WishlistIn, WishlistOut
+from app.schemas import Id, SaveIn, WishlistDetail, WishlistIn, WishlistOut
 from app.security import current_user
 
 router = APIRouter(prefix="/api/wishlists", tags=["wishlists"])
 
 # func.now() is the transaction's start time, so "most recent" could tie. Timestamps are set
-# from Python (microseconds) and ties are broken by id.
+# from Python in UTC (like the database defaults, whose session time zone is UTC) and ties
+# are broken by id.
 _newest_first = (Wishlist.updated_at.desc(), Wishlist.id.desc())
 
 
@@ -33,7 +34,7 @@ def _is_saved(db: Session, wishlist_id: int, listing_id: int) -> bool:
 
 
 def _save(db: Session, wishlist: Wishlist, listing_id: int) -> None:
-    now = datetime.now()
+    now = datetime.now(UTC)
     wishlist.updated_at = now
     if not _is_saved(db, wishlist.id, listing_id):  # saving twice is a no-op
         db.add(WishlistItem(wishlist_id=wishlist.id, listing_id=listing_id, created_at=now))
@@ -69,7 +70,7 @@ def my_wishlists(db: Session = Depends(get_db), user: User = Depends(current_use
 def create(body: WishlistIn, db: Session = Depends(get_db), user: User = Depends(current_user)):
     if body.listing_id is not None:
         get_live_listing(db, body.listing_id)
-    wishlist = Wishlist(user_id=user.id, name=body.name, updated_at=datetime.now())
+    wishlist = Wishlist(user_id=user.id, name=body.name, updated_at=datetime.now(UTC))
     db.add(wishlist)
     db.flush()
     if body.listing_id is not None:
@@ -91,7 +92,7 @@ def saved(db: Session = Depends(get_db), user: User = Depends(current_user)):
 
 
 @router.get("/{wishlist_id}", response_model=WishlistDetail)
-def detail(wishlist_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
+def detail(wishlist_id: Id, db: Session = Depends(get_db), user: User = Depends(current_user)):
     wishlist = _owned(db, wishlist_id, user)
     rows = db.execute(
         rated_listings().join(WishlistItem, WishlistItem.listing_id == Listing.id)
@@ -103,14 +104,14 @@ def detail(wishlist_id: int, db: Session = Depends(get_db), user: User = Depends
 
 
 @router.delete("/{wishlist_id}", status_code=204)
-def delete(wishlist_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
+def delete(wishlist_id: Id, db: Session = Depends(get_db), user: User = Depends(current_user)):
     db.delete(_owned(db, wishlist_id, user))
     db.commit()
     return Response(status_code=204)
 
 
 @router.post("/{wishlist_id}/items", response_model=WishlistOut)
-def save_item(wishlist_id: int, body: SaveIn, db: Session = Depends(get_db),
+def save_item(wishlist_id: Id, body: SaveIn, db: Session = Depends(get_db),
               user: User = Depends(current_user)):
     wishlist = _owned(db, wishlist_id, user)
     get_live_listing(db, body.listing_id)
@@ -126,7 +127,7 @@ def save_item(wishlist_id: int, body: SaveIn, db: Session = Depends(get_db),
 
 
 @router.delete("/{wishlist_id}/items/{listing_id}", status_code=204)
-def remove_item(wishlist_id: int, listing_id: int, db: Session = Depends(get_db),
+def remove_item(wishlist_id: Id, listing_id: Id, db: Session = Depends(get_db),
                 user: User = Depends(current_user)):
     wishlist = _owned(db, wishlist_id, user)
     item = db.get(WishlistItem, (wishlist.id, listing_id))

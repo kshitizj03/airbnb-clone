@@ -6,24 +6,35 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
+from app import clock
 from app.availability import booked_ranges, has_overlap, overlap_clause
 from app.cards import rated_listings, rating_order, to_card
-from app import clock
-from app.clock import today
 from app.db import get_db
 from app.errors import AppError
-from app.models import (
-    Amenity, Booking, Listing, ListingPhoto, Review, User, listing_amenities,
-)
+from app.models import Amenity, Booking, Listing, ListingPhoto, Review, User, listing_amenities
 from app.pricing import quote, validate_stay
 from app.schemas import (
-    HostOut, ListingCard, ListingDetail, ListingIn, ListingPatch, Page, PriceQuoteOut,
-    RatingBreakdown, ReviewOut,
+    DB_INT_MAX,
+    MAX_GUESTS,
+    MAX_INFANTS,
+    MAX_PETS,
+    MAX_PRICE,
+    HostOut,
+    Id,
+    ListingCard,
+    ListingDetail,
+    ListingIn,
+    ListingPatch,
+    Page,
+    PriceQuoteOut,
+    RatingBreakdown,
+    ReviewOut,
 )
 from app.security import current_user
 
 router = APIRouter(prefix="/api/listings", tags=["listings"])
 
+MAX_PAGE = 1000  # keeps OFFSET far from integer overflow
 PAGE_SIZE = 18
 REVIEWS_PAGE_SIZE = 10
 SCORES = ("cleanliness", "accuracy", "checkin", "communication", "location", "value")
@@ -55,18 +66,18 @@ def search(
     location: str | None = None,
     check_in: date | None = None,
     check_out: date | None = None,
-    guests: int | None = Query(None, ge=1),
-    min_price: int | None = None,
-    max_price: int | None = None,
+    guests: int | None = Query(None, ge=1, le=DB_INT_MAX),
+    min_price: int | None = Query(None, ge=0, le=MAX_PRICE),
+    max_price: int | None = Query(None, ge=0, le=MAX_PRICE),
     place_type: str | None = None,
     property_types: str | None = None,
     amenities: str | None = None,
-    bedrooms: int | None = None,
-    beds: int | None = None,
-    bathrooms: int | None = None,
+    bedrooms: int | None = Query(None, ge=0, le=DB_INT_MAX),
+    beds: int | None = Query(None, ge=0, le=DB_INT_MAX),
+    bathrooms: int | None = Query(None, ge=0, le=DB_INT_MAX),
     instant_book: bool | None = None,
     pets: bool | None = None,
-    page: int = Query(1, ge=1),
+    page: int = Query(1, ge=1, le=MAX_PAGE),
     db: Session = Depends(get_db),
 ):
     _check_dates(check_in, check_out)
@@ -173,7 +184,7 @@ def _detail(db: Session, listing: Listing) -> ListingDetail:
 
 
 @router.get("/{listing_id}", response_model=ListingDetail)
-def detail(listing_id: int, db: Session = Depends(get_db)):
+def detail(listing_id: Id, db: Session = Depends(get_db)):
     return _detail(db, get_live_listing(db, listing_id))
 
 
@@ -210,7 +221,7 @@ def _owned_listing(db: Session, listing_id: int, user: User) -> Listing:
 
 
 @router.patch("/{listing_id}", response_model=ListingDetail)
-def update_listing(listing_id: int, body: ListingPatch, db: Session = Depends(get_db),
+def update_listing(listing_id: Id, body: ListingPatch, db: Session = Depends(get_db),
                    user: User = Depends(current_user)):
     listing = _owned_listing(db, listing_id, user)
     changes = body.model_dump(exclude_none=True)  # only the fields the client sent
@@ -226,7 +237,7 @@ def update_listing(listing_id: int, body: ListingPatch, db: Session = Depends(ge
 
 
 @router.delete("/{listing_id}", status_code=204)
-def delete_listing(listing_id: int, db: Session = Depends(get_db),
+def delete_listing(listing_id: Id, db: Session = Depends(get_db),
                    user: User = Depends(current_user)):
     listing = _owned_listing(db, listing_id, user)
     upcoming = db.scalar(select(Booking.id).where(
@@ -241,9 +252,9 @@ def delete_listing(listing_id: int, db: Session = Depends(get_db),
 
 
 @router.get("/{listing_id}/availability")
-def availability(listing_id: int, db: Session = Depends(get_db)):
+def availability(listing_id: Id, db: Session = Depends(get_db)):
     get_live_listing(db, listing_id)
-    start = today()
+    start = clock.today()
     ranges = booked_ranges(db, listing_id, start, start + timedelta(days=365))
     return {"booked": [{"check_in": a.isoformat(), "check_out": b.isoformat()}
                        for a, b in ranges]}
@@ -251,13 +262,13 @@ def availability(listing_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{listing_id}/quote", response_model=PriceQuoteOut)
 def price_quote(
-    listing_id: int,
+    listing_id: Id,
     check_in: date,
     check_out: date,
-    adults: int = Query(1, ge=1),
-    children: int = Query(0, ge=0),
-    infants: int = Query(0, ge=0),
-    pets: int = Query(0, ge=0),
+    adults: int = Query(1, ge=1, le=MAX_GUESTS),
+    children: int = Query(0, ge=0, le=MAX_GUESTS),
+    infants: int = Query(0, ge=0, le=MAX_INFANTS),
+    pets: int = Query(0, ge=0, le=MAX_PETS),
     db: Session = Depends(get_db),
 ):
     listing = get_live_listing(db, listing_id)
@@ -275,9 +286,9 @@ def review_out(r: Review) -> ReviewOut:
 
 @router.get("/{listing_id}/reviews", response_model=Page[ReviewOut])
 def reviews(
-    listing_id: int,
+    listing_id: Id,
     sort: Literal["recent", "highest", "lowest"] = "recent",
-    page: int = Query(1, ge=1),
+    page: int = Query(1, ge=1, le=MAX_PAGE),
     db: Session = Depends(get_db),
 ):
     get_live_listing(db, listing_id)

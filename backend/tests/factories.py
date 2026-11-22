@@ -15,13 +15,13 @@ def make_user(db, email="u@x.com", name="U", is_host=False) -> User:
 
 
 def make_listing(db, host, **overrides) -> Listing:
-    fields = dict(
-        host_id=host.id, title="Test stay", description="A test listing",
-        property_type="flat", place_type="entire_home", address="1 Test Road",
-        city="Goa", state="Goa", country="India", latitude=15.5, longitude=73.8,
-        price_per_night=4000, cleaning_fee=500, max_guests=4, bedrooms=1, beds=1, bathrooms=1,
-        pets_allowed=False, instant_book=True,
-    )
+    fields = {
+        "host_id": host.id, "title": "Test stay", "description": "A test listing",
+        "property_type": "flat", "place_type": "entire_home", "address": "1 Test Road",
+        "city": "Goa", "state": "Goa", "country": "India", "latitude": 15.5, "longitude": 73.8,
+        "price_per_night": 4000, "cleaning_fee": 500, "max_guests": 4, "bedrooms": 1, "beds": 1,
+        "bathrooms": 1, "pets_allowed": False, "instant_book": True,
+    }
     fields.update(overrides)
     listing = Listing(**fields)
     listing.photos = [ListingPhoto(url="https://images.unsplash.com/photo-test?w=1200&q=80",
@@ -46,8 +46,8 @@ def make_booking(db, listing, guest, check_in: date, check_out: date, status="co
 
 
 def make_review(db, booking, comment="Lovely stay", **scores) -> Review:
-    fields = dict(rating=5, cleanliness=5, accuracy=5, checkin=5, communication=5, location=5,
-                  value=5)
+    fields = {"rating": 5, "cleanliness": 5, "accuracy": 5, "checkin": 5, "communication": 5,
+              "location": 5, "value": 5}
     fields.update(scores)
     review = Review(booking_id=booking.id, listing_id=booking.listing_id,
                     author_id=booking.guest_id, comment=comment, **fields)

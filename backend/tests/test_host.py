@@ -7,6 +7,7 @@ from app.models import Amenity, Listing, ListingPhoto
 from tests.factories import make_booking, make_listing, make_user
 
 PHOTO = "https://images.unsplash.com/photo-new?w=1200"
+BLOB = "https://abc123.public.blob.vercel-storage.com/listing-photos/x.jpg"
 
 
 def _login(client, email):
@@ -98,20 +99,59 @@ def test_patch_updates_fields_and_amenities(client, db):
     assert db.get(Listing, listing.id).updated_at > before
 
 
-def test_patch_replaces_photos_in_order(client, db):
+def test_patch_replaces_and_reorders_photos(client, db):
+    # (listing_id, position) is unique, so replacing and reordering must not collide.
     _, listing = _host_setup(db, client)
-    urls = ["https://a.test/1.jpg", "https://a.test/2.jpg", "https://a.test/3.jpg"]
-    r = client.patch(f"/api/listings/{listing.id}", json={"photo_urls": urls})
-    assert r.status_code == 200, r.text
-    assert r.json()["photos"] == urls
-    db.expire_all()
-    rows = db.scalars(select(ListingPhoto).where(ListingPhoto.listing_id == listing.id)
-                      .order_by(ListingPhoto.position)).all()
-    assert [(p.position, p.url) for p in rows] == list(enumerate(urls))
+    urls = [f"https://images.unsplash.com/photo-{i}?w=1200" for i in range(3)] + [BLOB]
+    for wanted in (urls, urls[::-1]):
+        r = client.patch(f"/api/listings/{listing.id}", json={"photo_urls": wanted})
+        assert r.status_code == 200, r.text
+        assert r.json()["photos"] == wanted
+        db.expire_all()
+        rows = db.scalars(select(ListingPhoto).where(ListingPhoto.listing_id == listing.id)
+                          .order_by(ListingPhoto.position)).all()
+        assert [(p.position, p.url) for p in rows] == list(enumerate(wanted))
+
+
+def test_photo_hosts_are_allowlisted(client, db):
+    _, listing = _host_setup(db, client)
+    for bad in ("http://images.unsplash.com/photo-1", "https://example.com/a.jpg",
+                "https://images.unsplash.com.evil.test/a.jpg",
+                "https://evil.test/x.public.blob.vercel-storage.com.jpg"):
+        r = client.patch(f"/api/listings/{listing.id}", json={"photo_urls": [PHOTO, bad]})
+        _error(r, 422, "validation_error")
+        assert "photo_urls.1" in r.json()["error"]["fields"]  # the wizard maps this to Photos
+    ok = client.patch(f"/api/listings/{listing.id}", json={"photo_urls": [BLOB, PHOTO]})
+    assert ok.status_code == 200, ok.text
+
+
+def test_coordinates_in_range_and_not_nan(client, db):
+    _, listing = _host_setup(db, client)
+    for bad in ({"latitude": 90.5}, {"latitude": -91}, {"longitude": 180.1},
+                {"longitude": -181}):
+        _error(client.patch(f"/api/listings/{listing.id}", json=bad), 422, "validation_error")
+    # JSON has no NaN, but Python's parser accepts the literal, so send it raw.
+    for field in ("latitude", "longitude"):
+        r = client.patch(f"/api/listings/{listing.id}", content=f'{{"{field}": NaN}}',
+                         headers={"Content-Type": "application/json"})
+        _error(r, 422, "validation_error")
+    assert client.patch(f"/api/listings/{listing.id}",
+                        json={"latitude": -90, "longitude": 180}).status_code == 200
+
+
+def test_blank_text_and_oversized_numbers_422_not_500(client, db):
+    make_user(db, "n@x.com")
+    _login(client, "n@x.com")
+    for bad in ({"title": "   "}, {"city": " \t "}, {"description": "x" * 501},
+                {"address": "x" * 121}, {"cleaning_fee": 10**12}, {"price_per_night": 10**12},
+                {"bedrooms": 10**12}, {"beds": 51}, {"max_guests": 10**12}):
+        _error(client.post("/api/listings", json={**_payload(), **bad}), 422, "validation_error")
+    r = client.post("/api/listings", json={**_payload(), "title": "  Padded  "})
+    assert r.status_code == 201 and r.json()["title"] == "Padded"
 
 
 def test_delete_with_upcoming_booking_409(client, db):
-    host, listing = _host_setup(db, client)
+    _, listing = _host_setup(db, client)
     guest = make_user(db, "g@x.com")
     d = today() + timedelta(days=5)
     make_booking(db, listing, guest, d, d + timedelta(days=2))
@@ -132,7 +172,7 @@ def test_delete_soft_deletes_and_second_call_404(client, db):
 
 
 def test_deleted_listing_hidden_from_search_but_in_guest_trips(client, db):
-    host, listing = _host_setup(db, client)
+    _, listing = _host_setup(db, client)
     guest = make_user(db, "g@x.com")
     d = today() - timedelta(days=9)
     make_booking(db, listing, guest, d, d + timedelta(days=2))
@@ -145,11 +185,12 @@ def test_deleted_listing_hidden_from_search_but_in_guest_trips(client, db):
     assert [t["listing"]["id"] for t in trips] == [listing.id]
 
 
-def test_quote_rejects_negative_counts(client, db):
-    host, listing = _host_setup(db, client)
+def test_quote_rejects_negative_and_oversized_counts(client, db):
+    _, listing = _host_setup(db, client)
     d = today() + timedelta(days=5)
     base = f"/api/listings/{listing.id}/quote?check_in={d}&check_out={d + timedelta(days=2)}"
-    for param in ("children=-1", "infants=-1", "pets=-1", "adults=0"):
+    for param in ("children=-1", "infants=-1", "pets=-1", "adults=0", "adults=17",
+                  f"infants={10**12}", "pets=6", f"children={10**20}"):
         _error(client.get(f"{base}&{param}"), 422, "validation_error")
 
 

@@ -73,6 +73,16 @@ def test_search_check_in_without_check_out_422(client):
     assert client.get("/api/listings", params={"page": 0}).status_code == 422
 
 
+def test_search_oversized_numbers_422_not_500(client):
+    for params in ({"page": 1001}, {"page": 10**20}, {"min_price": 10**12},
+                   {"max_price": 1_000_001}, {"min_price": -1}, {"guests": 10**20},
+                   {"bedrooms": 2**31}, {"beds": 99_999_999_999}, {"bathrooms": -1}):
+        r = client.get("/api/listings", params=params)
+        assert r.status_code == 422, (params, r.text)
+        assert r.json()["error"]["code"] == "validation_error"
+    assert client.get("/api/listings", params={"page": 1000}).status_code == 200
+
+
 def test_search_paginates_18(client, db):
     host = make_user(db, "h@x.com")
     for _ in range(20):
@@ -195,3 +205,31 @@ def test_detail_returns_all_photos_cards_five(client, db):
     urls = [f"https://img/{i}" for i in range(7)]
     assert client.get(f"/api/listings/{listing.id}").json()["photos"] == urls
     assert client.get("/api/listings").json()["items"][0]["photos"] == urls[:5]
+
+
+def test_oversized_ids_422_not_500(client, db):
+    # Ids are Postgres integers: a bigger number must be refused before it reaches SQL.
+    make_user(db, "u@x.com")
+    r = client.post("/api/auth/login", json={"email": "u@x.com", "password": "password123"})
+    assert r.status_code == 200, r.text
+    big = 2**31
+    stay = {"check_in": "2030-01-01", "check_out": "2030-01-02"}
+    for method, path, body in (
+        ("get", f"/api/listings/{big}", None),
+        ("get", f"/api/listings/{big}/reviews", None),
+        ("get", f"/api/listings/{big}/availability", None),
+        ("get", f"/api/listings/{big}/quote?check_in=2030-01-01&check_out=2030-01-02", None),
+        ("patch", f"/api/listings/{big}", {"title": "x"}),
+        ("delete", f"/api/listings/{big}", None),
+        ("get", f"/api/bookings/{big}", None),
+        ("post", f"/api/bookings/{big}/cancel", None),
+        ("post", "/api/bookings", {"listing_id": big, **stay}),
+        ("get", f"/api/host/reservations?listing_id={big}", None),
+        ("get", f"/api/wishlists/{big}", None),
+        ("delete", f"/api/wishlists/{big}/items/{big}", None),
+        ("post", "/api/wishlists", {"name": "x", "listing_id": big}),
+    ):
+        kwargs = {"json": body} if body is not None else {}
+        r = getattr(client, method)(path, **kwargs)
+        assert r.status_code == 422, (method, path, r.text)
+    assert client.get("/api/listings/2147483647").status_code == 404  # largest id: just missing

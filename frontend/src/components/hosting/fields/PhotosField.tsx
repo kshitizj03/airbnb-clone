@@ -23,7 +23,7 @@ export function PhotosField({ value, onChange, error }: Props) {
 
   function addUrl() {
     const u = url.trim();
-    if (!isPhotoUrl(u)) return setLocalError("Enter a link that starts with http:// or https://");
+    if (!isPhotoUrl(u)) return setLocalError("Use an https link from images.unsplash.com, or upload the photo.");
     if (value.includes(u)) return setLocalError("That photo is already added.");
     setLocalError(undefined);
     setUrl("");
@@ -67,7 +67,7 @@ export function PhotosField({ value, onChange, error }: Props) {
             id="photo-url"
             type="url"
             value={url}
-            placeholder="Paste a photo link (https://...)"
+            placeholder="Paste an Unsplash photo link (https://images.unsplash.com/...)"
             disabled={full}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => {

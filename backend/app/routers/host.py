@@ -5,12 +5,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app import clock
-from app.cards import rated_listings, to_card
+from app.cards import booking_out, listing_cards, rated_listings, reviewed_ids, to_card
 from app.db import get_db
 from app.errors import AppError
 from app.models import Booking, Listing, User
-from app.routers.bookings import _cards, _out, _reviewed
-from app.schemas import BookingOut, GuestOut, HostListingCard
+from app.schemas import BookingOut, GuestOut, HostListingCard, Id
 from app.security import current_user
 
 router = APIRouter(prefix="/api/host", tags=["host"])
@@ -33,7 +32,7 @@ def my_listings(db: Session = Depends(get_db), user: User = Depends(current_user
 
 @router.get("/reservations", response_model=list[BookingOut])
 def reservations(status: Literal["upcoming", "past", "cancelled"] = "upcoming",
-                 listing_id: int | None = None, db: Session = Depends(get_db),
+                 listing_id: Id | None = None, db: Session = Depends(get_db),
                  user: User = Depends(current_user)):
     query = (select(Booking).join(Listing).where(Listing.host_id == user.id)
              .options(joinedload(Booking.guest)))
@@ -55,11 +54,11 @@ def reservations(status: Literal["upcoming", "past", "cancelled"] = "upcoming",
         query = query.where(Booking.status == "cancelled")
         query = query.order_by(Booking.check_in.desc(), Booking.id.desc())
     bookings = db.scalars(query).all()
-    cards = _cards(db, {b.listing_id for b in bookings})
-    reviewed = _reviewed(db, [b.id for b in bookings])
+    cards = listing_cards(db, {b.listing_id for b in bookings})
+    reviewed = reviewed_ids(db, [b.id for b in bookings])
     result = []
     for b in bookings:
-        out = _out(b, cards[b.listing_id], b.id in reviewed)
+        out = booking_out(b, cards[b.listing_id], b.id in reviewed)
         out.guest = GuestOut(name=b.guest.name, avatar_url=b.guest.avatar_url)
         result.append(out)
     return result

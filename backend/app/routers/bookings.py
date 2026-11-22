@@ -6,34 +6,16 @@ from sqlalchemy.orm import Session
 
 from app import clock
 from app.availability import has_overlap
-from app.cards import rated_listings, to_card
+from app.cards import booking_out, listing_cards, reviewed_ids
 from app.db import get_db
 from app.errors import AppError
-from app.models import Booking, Listing, Review, User
+from app.models import Booking, Review, User
 from app.pricing import quote, validate_stay
 from app.routers.listings import get_live_listing, review_out
-from app.schemas import BookingIn, BookingOut, ListingCard, ReviewIn, ReviewOut
+from app.schemas import BookingIn, BookingOut, Id, ReviewIn, ReviewOut
 from app.security import current_user
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
-
-
-def _out(booking: Booking, card: ListingCard, reviewed: bool = False) -> BookingOut:
-    return BookingOut(listing=card, reviewed=reviewed, **{f: getattr(booking, f) for f in (
-        "id", "check_in", "check_out", "adults", "children", "infants", "pets", "nights",
-        "nightly_price", "cleaning_fee", "service_fee", "taxes", "total", "status", "created_at")})
-
-
-def _cards(db: Session, listing_ids: set[int]) -> dict[int, ListingCard]:
-    """Cards by listing id in one query (plus photos). Includes soft-deleted listings, so a
-    guest's past trip still renders."""
-    rows = db.execute(rated_listings(include_deleted=True).where(Listing.id.in_(listing_ids)))
-    return {listing.id: to_card(listing, rating, n) for listing, rating, n in rows}
-
-
-def _reviewed(db: Session, booking_ids: list[int]) -> set[int]:
-    """Which of these bookings have a review, in one query."""
-    return set(db.scalars(select(Review.booking_id).where(Review.booking_id.in_(booking_ids))))
 
 
 def _get_booking(db: Session, booking_id: int, user: User, guest_only: bool) -> Booking:
@@ -70,28 +52,28 @@ def create_booking(body: BookingIn, db: Session = Depends(get_db),
         if not isinstance(e.orig, errors.ExclusionViolation):
             raise
         raise AppError(409, "dates_unavailable", "Those dates are already booked.")
-    return _out(booking, _cards(db, {listing.id})[listing.id])
+    return booking_out(booking, listing_cards(db, {listing.id})[listing.id])
 
 
 @router.get("/me", response_model=list[BookingOut])
 def my_trips(db: Session = Depends(get_db), user: User = Depends(current_user)):
     bookings = db.scalars(select(Booking).where(Booking.guest_id == user.id)
                           .order_by(Booking.check_in.desc(), Booking.id.desc())).all()
-    cards = _cards(db, {b.listing_id for b in bookings})
-    reviewed = _reviewed(db, [b.id for b in bookings])
-    return [_out(b, cards[b.listing_id], b.id in reviewed) for b in bookings]
+    cards = listing_cards(db, {b.listing_id for b in bookings})
+    reviewed = reviewed_ids(db, [b.id for b in bookings])
+    return [booking_out(b, cards[b.listing_id], b.id in reviewed) for b in bookings]
 
 
 @router.get("/{booking_id}", response_model=BookingOut)
-def get_booking(booking_id: int, db: Session = Depends(get_db),
+def get_booking(booking_id: Id, db: Session = Depends(get_db),
                 user: User = Depends(current_user)):
     booking = _get_booking(db, booking_id, user, guest_only=False)
-    return _out(booking, _cards(db, {booking.listing_id})[booking.listing_id],
-                booking.id in _reviewed(db, [booking.id]))
+    return booking_out(booking, listing_cards(db, {booking.listing_id})[booking.listing_id],
+                       booking.id in reviewed_ids(db, [booking.id]))
 
 
 @router.post("/{booking_id}/cancel", response_model=BookingOut)
-def cancel_booking(booking_id: int, db: Session = Depends(get_db),
+def cancel_booking(booking_id: Id, db: Session = Depends(get_db),
                    user: User = Depends(current_user)):
     booking = _get_booking(db, booking_id, user, guest_only=True)
     if booking.status == "cancelled":
@@ -100,11 +82,11 @@ def cancel_booking(booking_id: int, db: Session = Depends(get_db),
         raise AppError(409, "already_started", "A stay that has started cannot be cancelled.")
     booking.status = "cancelled"
     db.commit()
-    return _out(booking, _cards(db, {booking.listing_id})[booking.listing_id])
+    return booking_out(booking, listing_cards(db, {booking.listing_id})[booking.listing_id])
 
 
 @router.post("/{booking_id}/review", response_model=ReviewOut, status_code=201)
-def review_stay(booking_id: int, body: ReviewIn, db: Session = Depends(get_db),
+def review_stay(booking_id: Id, body: ReviewIn, db: Session = Depends(get_db),
                 user: User = Depends(current_user)):
     booking = _get_booking(db, booking_id, user, guest_only=True)
     if booking.status == "cancelled":
