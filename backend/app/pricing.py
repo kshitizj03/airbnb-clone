@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
 from app import clock
@@ -8,6 +8,9 @@ from app.models import Listing
 
 SERVICE_FEE_RATE = Decimal("0.14")  # mock rates (README: Pricing)
 TAX_RATE = Decimal("0.05")
+# Check-in must fall inside the window the availability calendar shows. Without a limit, a stay in
+# year 9999 would count as "upcoming" forever and block the host from ever deleting the listing.
+BOOKING_WINDOW_DAYS = 365
 
 
 @dataclass
@@ -41,6 +44,10 @@ def validate_stay(listing: Listing, check_in: date, check_out: date, adults: int
     if check_in < clock.today():
         raise AppError(422, "past_dates", "Check-in cannot be in the past.",
                        {"check_in": "Pick today or a later date."})
+    if check_in >= clock.today() + timedelta(days=BOOKING_WINDOW_DAYS):
+        raise AppError(422, "too_far_ahead",
+                       f"Bookings open up to {BOOKING_WINDOW_DAYS} days ahead.",
+                       {"check_in": "Pick an earlier date."})
     if check_out <= check_in:
         raise AppError(422, "invalid_dates", "Check-out must be after check-in.",
                        {"check_out": "Must be after check_in."})

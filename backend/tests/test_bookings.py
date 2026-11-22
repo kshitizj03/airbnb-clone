@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from app import clock
 from app.clock import today
+from app.pricing import BOOKING_WINDOW_DAYS
 from tests.factories import make_booking, make_listing, make_user
 
 
@@ -110,6 +111,17 @@ def test_invalid_and_too_long_stays_422(client, db):
     _, _, listing = _setup(db, client)
     _error(client.post("/api/bookings", json=_body(listing, 5, 0)), 422, "invalid_dates")
     _error(client.post("/api/bookings", json=_body(listing, 5, 366)), 422, "too_long")
+
+
+def test_check_in_beyond_booking_window_422(client, db):
+    # A stay far in the future would stay "upcoming" forever and block deleting the listing.
+    _, _, listing = _setup(db, client)
+    last_ok = BOOKING_WINDOW_DAYS - 1
+    assert client.post("/api/bookings", json=_body(listing, last_ok, 2)).status_code == 201
+    _error(client.post("/api/bookings", json=_body(listing, BOOKING_WINDOW_DAYS, 2)), 422,
+           "too_far_ahead")
+    far = {"listing_id": listing.id, "check_in": "9999-01-01", "check_out": "9999-01-03"}
+    _error(client.post("/api/bookings", json=far), 422, "too_far_ahead")
 
 
 def test_too_many_guests_422_infants_not_counted(client, db):

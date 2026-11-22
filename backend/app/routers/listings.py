@@ -12,7 +12,7 @@ from app.cards import rated_listings, rating_order, to_card
 from app.db import get_db
 from app.errors import AppError
 from app.models import Amenity, Booking, Listing, ListingPhoto, Review, User, listing_amenities
-from app.pricing import quote, validate_stay
+from app.pricing import BOOKING_WINDOW_DAYS, quote, validate_stay
 from app.schemas import (
     DB_INT_MAX,
     MAX_GUESTS,
@@ -255,7 +255,7 @@ def delete_listing(listing_id: Id, db: Session = Depends(get_db),
 def availability(listing_id: Id, db: Session = Depends(get_db)):
     get_live_listing(db, listing_id)
     start = clock.today()
-    ranges = booked_ranges(db, listing_id, start, start + timedelta(days=365))
+    ranges = booked_ranges(db, listing_id, start, start + timedelta(days=BOOKING_WINDOW_DAYS))
     return {"booked": [{"check_in": a.isoformat(), "check_out": b.isoformat()}
                        for a, b in ranges]}
 

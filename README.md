@@ -378,6 +378,7 @@ The check scripts import TypeScript directly, which needs Node 22.18 or newer. C
 - A host is a Superhost when the average rating across their live listings is at least 4.8 and those listings have at least 10 completed stays (confirmed, checked out by today).
 - A user becomes a host by creating a listing; there is no separate host sign-up.
 - A booking is confirmed immediately (no host approval step), and only stays that have not started can be cancelled.
+- Check-in must be within the next 365 days (the window the availability calendar shows), and a stay is at most 365 nights. Without that limit, a booking in a far-future year would stay "upcoming" forever and stop the host from ever deleting the listing.
 - Photos are Unsplash URLs or uploads to the app's Vercel Blob store: the API (and the wizard) only accept https links from `images.unsplash.com` or `*.public.blob.vercel-storage.com`. Vercel functions accept request bodies up to about 4.5 MB, so uploads are capped at 4 MB. The map uses OpenStreetMap tiles.
 - "Today" is computed in Asia/Kolkata for date validation, by the API and by the calendars and trip tabs in the browser.
 - No migrations: `python -m app.seed` only creates missing tables, so a change to an existing table needs `--reset` (which deletes all data).
