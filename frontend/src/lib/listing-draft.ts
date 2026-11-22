@@ -53,7 +53,7 @@ export type Basics = Pick<Draft, "max_guests" | "bedrooms" | "beds" | "bathrooms
 export type Pricing = Pick<Draft, "price_per_night" | "cleaning_fee" | "instant_book" | "pets_allowed">;
 
 export const MAX_PRICE = 1_000_000;
-export const isPhotoUrl = (u: string) => /^https?:\/\/\S+$/i.test(u) || /^\/uploads\/\S+$/.test(u);
+export const isPhotoUrl = (u: string) => /^https?:\/\/\S+$/i.test(u);
 
 export type SectionId = "type" | "location" | "basics" | "amenities" | "photos" | "title" | "description" | "pricing";
 

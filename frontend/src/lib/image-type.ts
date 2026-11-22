@@ -1,5 +1,4 @@
-// Same rule as the backend's _sniff (backend/app/routers/uploads.py): the file's first bytes
-// decide its type, never its name or the browser's claim alone.
+// The file's first bytes decide its type, never its name or the browser's claim alone.
 export function sniffImage(b: Uint8Array): { type: string; ext: string } | null {
   const starts = (sig: number[], at = 0) => sig.every((x, i) => b[at + i] === x);
   if (starts([0xff, 0xd8, 0xff])) return { type: "image/jpeg", ext: "jpg" };

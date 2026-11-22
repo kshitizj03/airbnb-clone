@@ -1,9 +1,8 @@
 import { put } from "@vercel/blob";
 import { sniffImage } from "@/lib/image-type";
 
-// Photo uploads. Lives outside /api because next.config.ts rewrites /api/* to FastAPI.
-// On Vercel (BLOB_READ_WRITE_TOKEN set) the photo goes to Vercel Blob; locally it is
-// handed to the backend, which keeps it on disk as before.
+// Photo uploads to Vercel Blob. Lives outside /api because next.config.ts rewrites /api/* to FastAPI.
+// Needs BLOB_READ_WRITE_TOKEN (set on Vercel; locally via `vercel env pull`).
 
 const backend = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 const MAX_BYTES = 4 * 1024 * 1024; // Vercel functions refuse bodies over ~4.5 MB anyway
@@ -17,15 +16,7 @@ export async function POST(req: Request) {
   if (me.status !== 200) return error(401, "not_authenticated", "Please log in.");
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    const res = await fetch(`${backend}/api/uploads`, {
-      method: "POST",
-      headers: { cookie, "content-type": req.headers.get("content-type") ?? "" },
-      body: await req.arrayBuffer(),
-    });
-    return new Response(await res.text(), {
-      status: res.status,
-      headers: { "content-type": res.headers.get("content-type") ?? "application/json" },
-    });
+    return error(503, "uploads_unavailable", "Photo uploads are not configured here. Add a photo link instead.");
   }
 
   const file = (await req.formData().catch(() => null))?.get("file");
