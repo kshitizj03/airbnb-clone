@@ -2,20 +2,20 @@
 
 [![CI](https://github.com/kshitizj03/airbnb-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/kshitizj03/airbnb-clone/actions/workflows/ci.yml)
 
-An Airbnb-style stays marketplace: search with dates and filters, listing pages with a calendar and a live price quote, bookings with double-booking protection, wishlists, and a host dashboard with a listing editor. Next.js frontend, FastAPI backend, SQLite database.
+A full-stack stays marketplace built from scratch: search with dates and filters, listing pages with a calendar and a live price quote, bookings that cannot overlap, reviews, wishlists, and a host dashboard with a listing editor. Next.js frontend, FastAPI backend, Postgres database, all on Vercel and Neon.
 
-A personal project: a full-stack clone of Airbnb built from scratch. The UI look and copy mirror Airbnb on purpose; no Airbnb assets (logo files, images) are copied, and the project is not affiliated with Airbnb.
+The UI keeps Airbnb's look and wording on purpose. No Airbnb assets (logo files, images) are copied, and the project is not affiliated with Airbnb.
 
 ## Live demo
 
 - App: https://airbnb-clone-kshitiz.vercel.app
-- API docs (Swagger): https://stayhub-api-kj-g3amd8gmg4gydhdp.centralindia-01.azurewebsites.net/docs
+- API docs (Swagger): https://airbnb-clone-kshitiz-api.vercel.app/docs (the bare API URL redirects there)
 
 No sign-up needed: the login modal has **Continue as demo guest** and **Continue as demo host** buttons (`demo.guest@airbnb-clone.test` and `demo.host@airbnb-clone.test`). Normal sign-up and login also work.
 
-The API runs on a small Azure plan, so the first request after a long idle period can take a few seconds.
+The database (Neon) scales to zero when idle, so the first request after a quiet period can take a few seconds.
 
-Try it:
+## Try it
 
 1. Search **Goa** with check-in and check-out dates (the cards show the total "for N nights").
 2. Open a listing (gallery, calendar, booking card quote, Superhost badge in the host section).
@@ -26,60 +26,60 @@ Try it:
 7. Log in as the demo host, click **Switch to hosting**, open **Listings** and create a listing with the **+** button (upload a photo or paste a link); it appears in search.
 8. Open the user menu (top right) and switch the theme to **Dark**.
 
-### Highlights
+## Engineering highlights
 
-| Feature | How |
-|---|---|
-| Interactive map with listing pins | Done: search results map with price pins, plus a location map on each listing |
-| Leave a review after a completed stay | Done: `POST /api/bookings/{id}/review`, one review per stay, after checkout |
-| Superhost badges / ratings aggregation | Done: computed Superhost rule, rating averages and six category scores |
-| Image upload to cloud storage | Done: Vercel Blob in production |
-| Dark mode | Done: Light / Dark / System |
-| Responsive design | Done: mobile, tablet and desktop layouts (bottom tab bar and full-screen search on phones) |
+- **Double booking is impossible at the database level.** A Postgres exclusion constraint (`ex_booking_overlap`, btree_gist) forbids two confirmed bookings on one listing with overlapping `[check_in, check_out)` ranges, so a checkout day can be the next check-in. The API pre-checks for a friendly 409 `dates_unavailable` and maps a constraint violation (SQLSTATE 23P01) from a lost race to the same 409. A test fires two parallel requests with the pre-check disabled: exactly one gets 201.
+- **Prices are computed on the server only.** The quote and booking endpoints share one function; the client never sends a price. Each booking stores a snapshot of the nightly price and every fee, so a later price edit never changes an existing total.
+- **First-party session cookie.** The browser only talks to the frontend origin; Next.js rewrites `/api/*` to the API. The HttpOnly, SameSite=Lax session cookie is first-party and no CORS is needed.
+- **Uploads checked before they reach storage.** `/upload` forwards the cookie to `/api/auth/me` to check the session, caps files at 4 MB, and requires the file's magic bytes (JPEG, PNG, WebP) to agree with its declared type before storing it in Vercel Blob under a random name.
+- **Dark mode without a flash.** An inline script in `<head>` reads the saved choice (or the device setting) and sets the theme before first paint.
+- **Derived data is computed, not stored.** Ratings (`AVG`/`COUNT` over reviews), the six category scores and the Superhost badge are computed per request, so they cannot drift.
+- **CI on real Postgres.** GitHub Actions runs the backend tests against a `postgres:17` service and lints, type-checks and builds the frontend on every push to `main` and every pull request.
 
 ## Features
 
 | Area | What exists |
 |---|---|
-| Search | Location autocomplete, dates, guests, price range, place and property type, bedrooms/beds/bathrooms, amenities, instant book, pets, pagination (18 per page), map of results. Search state lives in the URL, so searches are shareable |
-| Listing page | Photo gallery and modal, amenities, description, reviews with rating breakdown and sorting, map, availability calendar with booked dates blocked, booking card with a live price quote, Superhost badge |
-| Booking | Server-computed price breakdown, checkout with a validated (mock) card form, confirmation page, Trips list, cancellation of upcoming stays, a star-rated review of each completed stay |
+| Search | Location autocomplete, dates, guests, price range, place and property type, bedrooms/beds/bathrooms, amenities, instant book, pets, pagination (18 per page), map with price pins. Search state lives in the URL, so searches are shareable |
+| Listing page | Photo gallery and modal, amenities, description, reviews with rating breakdown and sorting, location map, availability calendar with booked dates blocked, booking card with a live price quote, Superhost badge |
+| Booking | Server-computed price breakdown, checkout with a validated (mock) card form, confirmation page, Trips list, cancellation of upcoming stays, a star-rated review of each completed stay (overall plus six categories) |
 | Wishlists | Heart a listing (creates or picks a wishlist), wishlist pages, remove items, delete lists |
-| Hosting | Dashboard with reservations, own listings, create-listing wizard with photo upload (Vercel Blob in production) or URL, listing editor, soft delete (refused if upcoming bookings exist) |
+| Hosting | Dashboard with reservations, own listings, create-listing wizard with photo upload (Vercel Blob) or photo links, listing editor, soft delete (refused if upcoming bookings exist) |
 | Auth | Email and password sign-up and login, HttpOnly session cookie, demo buttons |
-| Dark mode | Follows the device setting by default; a Light / Dark / System switch sits at the bottom of the user menu (top right, also when logged out). The choice is saved in the browser and applied before first paint, so there is no flash of the wrong theme |
+| Dark mode | Light / Dark / System switch at the bottom of the user menu (also when logged out). Follows the device by default; the choice is saved in the browser |
+| Responsive | Mobile, tablet and desktop layouts (bottom tab bar and full-screen search on phones) |
 | Placeholders | Messages, Experiences, Services, profile and the footer links open a "Coming soon" page; checkout is a mocked card form |
 
 ## Tech stack
 
 | Layer | Tech |
 |---|---|
-| Frontend | Next.js 16.4.6 (App Router), React 19.3, TypeScript 5, Tailwind CSS 4.3, TanStack Query 5, react-day-picker 10, Leaflet 1.9 + react-leaflet 5 (OpenStreetMap tiles), date-fns 4, sonner, lucide-react |
-| Backend | Python 3.11, FastAPI 0.162, SQLAlchemy 2.1 (sync), Pydantic 2.14, uvicorn 0.54, PyJWT, bcrypt |
-| Database | SQLite (foreign keys on, CHECK constraints) |
-| Tests | pytest, httpx |
-| Hosting | Vercel (frontend), Azure App Service Linux (backend) |
+| Frontend | Next.js 16.4 (App Router), React 19.3, TypeScript 5, Tailwind CSS 4.3, TanStack Query 5, react-day-picker 10, Leaflet 1.9 + react-leaflet 5 (OpenStreetMap tiles), date-fns 4, @vercel/blob 2.8, sonner, lucide-react |
+| Backend | Python 3.12, FastAPI 0.162, SQLAlchemy 2.1 (sync), psycopg 3.3, Pydantic 2.14, uvicorn 0.54, PyJWT, bcrypt |
+| Database | Postgres (Neon in production, `postgres:17` locally and in CI) |
+| Tests | pytest + httpx (backend), node:assert check scripts, ESLint, `tsc` (frontend) |
+| Hosting | Vercel (two projects: Next.js app, FastAPI as a Vercel Function), Neon Postgres, Vercel Blob |
+| CI | GitHub Actions |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  B[Browser] --> V[Vercel: Next.js]
-  V -- "rewrites /api/* and /uploads/*" --> A[Azure App Service: FastAPI]
-  V -- "/upload: photo files" --> BL[(Vercel Blob)]
-  A --> D[(SQLite file on /home)]
+  B[Browser] --> F["Vercel: Next.js (airbnb-clone)"]
+  F -- "rewrite /api/*" --> A["Vercel Function: FastAPI (airbnb-clone-api)"]
+  A --> D[("Neon Postgres")]
+  F -- "/upload route handler" --> BL[("Vercel Blob")]
 ```
 
 Key decisions:
 
-- **Proxy for a first-party cookie.** The browser only talks to the Vercel domain. Next.js rewrites `/api/*` and `/uploads/*` to the API, so the HttpOnly session cookie is first-party and no CORS is needed.
-- **Photo uploads to Vercel Blob.** In production the browser posts photos to `/upload`, a Next.js route handler (outside `/api`, which is rewritten to FastAPI). It checks the session by forwarding the cookie to `/api/auth/me`, checks size (4 MB) and the real type by magic bytes (JPEG, PNG, WebP; same rule as the backend), stores the file in a public Vercel Blob store and returns its absolute URL, which the listing saves like any other photo link. Without `BLOB_READ_WRITE_TOKEN` (local development) the handler passes the upload to the backend's `/api/uploads`, which stores it on disk.
+- **One origin for the browser.** `next.config.ts` rewrites `/api/*` to `BACKEND_URL`, so cookies are first-party and there is no CORS configuration. `/upload` lives outside `/api` because `/api/*` belongs to FastAPI.
+- **Postgres everywhere.** The same database engine runs locally (Docker), in CI (service container) and in production (Neon), so the exclusion constraint is tested where it runs.
+- **Schema and seed are a command, not startup work.** `python -m app.seed` creates the btree_gist extension, the tables and the demo data. App startup never touches the database, which keeps serverless cold starts short. No Alembic yet.
+- **Functions next to the data.** The API function runs in Singapore (`sin1`), the same region as the Neon database.
 - **URL as search state.** Location, dates, guests and filters are query parameters, so any search is a shareable link and Back works as expected.
-- **Pricing is computed server-side only.** The quote endpoint and the booking endpoint use the same function; the client never sends a price.
 - **Soft delete for listings.** Bookings and reviews point at listings, so deleted listings must still render in past trips. They vanish from search and detail pages.
-- **Price snapshot on bookings.** Nightly price and every fee are copied onto the booking, so a later price edit never changes an existing total.
-- **Double booking prevention.** SQLite has no overlap constraint, so every write transaction starts with `BEGIN IMMEDIATE` (takes the write lock), then an overlap check on half-open ranges `[check_in, check_out)`, then the insert. A checkout day can be the next guest's check-in. Covered by a concurrency test.
-- **Sync SQLAlchemy, no Alembic.** One SQLite worker keeps the code simple; `create_all` builds the schema on startup and the app seeds itself on first start.
+- **Sync SQLAlchemy.** Plain sync sessions per request keep the code simple at this scale.
 
 ## Database schema
 
@@ -99,112 +99,113 @@ erDiagram
   listings ||--o{ wishlist_items : saved_in
 
   users {
-    int id PK
-    string email UK
-    string password_hash
-    string name
-    string avatar_url
-    string bio
-    bool is_host
-    datetime created_at
+    integer id PK
+    varchar email UK
+    varchar password_hash
+    varchar name
+    varchar avatar_url
+    text bio
+    boolean is_host
+    timestamp created_at
   }
   listings {
-    int id PK
-    int host_id FK
-    string title
-    string description
-    string property_type
-    string place_type
-    string address
-    string city
-    string state
-    string country
-    float latitude
-    float longitude
-    int price_per_night
-    int cleaning_fee
-    int max_guests
-    int bedrooms
-    int beds
-    int bathrooms
-    bool pets_allowed
-    bool instant_book
-    datetime created_at
-    datetime updated_at
-    datetime deleted_at
+    integer id PK
+    integer host_id FK
+    varchar title
+    text description
+    varchar property_type
+    varchar place_type
+    varchar address
+    varchar city
+    varchar state
+    varchar country
+    float8 latitude
+    float8 longitude
+    integer price_per_night
+    integer cleaning_fee
+    integer max_guests
+    integer bedrooms
+    integer beds
+    integer bathrooms
+    boolean pets_allowed
+    boolean instant_book
+    timestamp created_at
+    timestamp updated_at
+    timestamp deleted_at
   }
   listing_photos {
-    int id PK
-    int listing_id FK
-    string url
-    int position
+    integer id PK
+    integer listing_id FK
+    varchar url
+    integer position
   }
   amenities {
-    int id PK
-    string slug UK
-    string name
-    string category
+    integer id PK
+    varchar slug UK
+    varchar name
+    varchar category
   }
   listing_amenities {
-    int listing_id PK, FK
-    int amenity_id PK, FK
+    integer listing_id PK, FK
+    integer amenity_id PK, FK
   }
   bookings {
-    int id PK
-    int listing_id FK
-    int guest_id FK
+    integer id PK
+    integer listing_id FK
+    integer guest_id FK
     date check_in
     date check_out
-    int adults
-    int children
-    int infants
-    int pets
-    int nights
-    int nightly_price
-    int cleaning_fee
-    int service_fee
-    int taxes
-    int total
-    string status
-    datetime created_at
+    integer adults
+    integer children
+    integer infants
+    integer pets
+    integer nights
+    integer nightly_price
+    integer cleaning_fee
+    integer service_fee
+    integer taxes
+    integer total
+    varchar status
+    timestamp created_at
   }
   reviews {
-    int id PK
-    int booking_id UK, FK
-    int listing_id FK
-    int author_id FK
-    int rating
-    int cleanliness
-    int accuracy
-    int checkin
-    int communication
-    int location
-    int value
-    string comment
-    datetime created_at
+    integer id PK
+    integer booking_id UK, FK
+    integer listing_id FK
+    integer author_id FK
+    integer rating
+    integer cleanliness
+    integer accuracy
+    integer checkin
+    integer communication
+    integer location
+    integer value
+    text comment
+    timestamp created_at
   }
   wishlists {
-    int id PK
-    int user_id FK
-    string name
-    datetime created_at
-    datetime updated_at
+    integer id PK
+    integer user_id FK
+    varchar name
+    timestamp created_at
+    timestamp updated_at
   }
   wishlist_items {
-    int wishlist_id PK, FK
-    int listing_id PK, FK
-    datetime created_at
+    integer wishlist_id PK, FK
+    integer listing_id PK, FK
+    timestamp created_at
   }
 ```
 
 Notes:
 
-- Money is stored as whole rupees (INTEGER). Dates are plain `DATE`; "today" for validation is computed in `Asia/Kolkata`.
-- Guest vs host is a role per relationship, not an account type: any user can book, and creating a listing flips `is_host` (which shows "Switch to hosting").
+- **No overlapping stays:** `bookings` has the exclusion constraint `ex_booking_overlap`: `EXCLUDE USING gist (listing_id WITH =, daterange(check_in, check_out, '[)') WITH &&) WHERE (status = 'confirmed')`. It needs the `btree_gist` extension, which the schema creates before the table.
+- Money is stored as whole rupees (`integer`). Dates are plain `date`; "today" for validation is computed in `Asia/Kolkata`.
+- Guest vs host is a role per relationship, not an account type: any user can book, and creating a listing sets `is_host` (which shows "Switch to hosting").
 - `bookings.status` stores only `confirmed` or `cancelled`; upcoming, current and past are derived from dates.
-- Ratings are computed (`AVG`/`COUNT` over `reviews`), never stored, so they cannot drift. `reviews.booking_id` is unique: one review per stay, which also proves the stay.
-- CHECK constraints guard positive prices, minimum guests/beds/baths, `check_out > check_in`, `adults >= 1`, rating range 1 to 5, and the allowed `property_type`, `place_type`, `category` and `status` values.
-- Indexes on `listings(city)`, `listings(host_id)`, `bookings(listing_id, check_in, check_out)` and `bookings(guest_id)`.
+- `reviews.booking_id` is unique: one review per stay, which also proves the stay.
+- CHECK constraints guard positive prices, non-negative cleaning fees, minimum guests/beds/baths, `check_out > check_in`, `adults >= 1`, every rating between 1 and 5, and the allowed `property_type`, `place_type`, `category` and `status` values.
+- Indexes on `listings(city)`, `listings(host_id)`, `bookings(listing_id, check_in, check_out)` and `bookings(guest_id)`, plus the GiST index behind the exclusion constraint.
 
 ## Pricing
 
@@ -220,7 +221,7 @@ Rounding is half up to whole rupees. The rates are mock values (see Assumptions)
 
 ## API overview
 
-All routes are under `/api`; interactive docs are at `<API>/docs`. Errors share one shape: `{"error": {"code", "message", "fields?"}}` with status 401, 403, 404, 409, 413, 415 or 422.
+All routes are under `/api`; interactive docs are at `/docs` on the API URL. Errors share one shape: `{"error": {"code", "message", "fields?"}}`, with status 401, 403, 404, 409 or 422.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
@@ -228,23 +229,22 @@ All routes are under `/api`; interactive docs are at `<API>/docs`. Errors share 
 | POST | `/api/auth/login` | - | Log in, sets cookie |
 | POST | `/api/auth/demo` | - | Log in as the seeded demo `guest` or `host` |
 | POST | `/api/auth/logout` | user | Clear cookie |
-| GET | `/api/auth/me` | optional | Current user, or 401 |
+| GET | `/api/auth/me` | - | Current user, or 401 |
 | GET | `/api/listings` | - | Search and filter, 18 per page |
-| GET | `/api/listings/{id}` | - | Listing detail |
+| GET | `/api/listings/{id}` | - | Listing detail with rating breakdown and host stats |
 | GET | `/api/listings/{id}/availability` | - | Booked ranges for the next 365 days |
-| GET | `/api/listings/{id}/reviews` | - | Reviews, `page`, `sort=recent\|highest\|lowest` |
-| GET | `/api/listings/{id}/quote` | - | Price breakdown for dates and guests, or an error |
+| GET | `/api/listings/{id}/reviews` | - | Reviews, 10 per page, `page`, `sort=recent\|highest\|lowest` |
+| GET | `/api/listings/{id}/quote` | - | Price breakdown for dates and guests, or an error (409 if booked) |
 | POST | `/api/listings` | user | Create a listing (user becomes host) |
 | PATCH | `/api/listings/{id}` | owner | Edit a listing |
 | DELETE | `/api/listings/{id}` | owner | Soft delete; 409 if upcoming bookings |
-| POST | `/api/uploads` | user | Upload an image (jpeg/png/webp, max 5 MB), returns `{url}` |
-| POST | `/api/bookings` | user | Create a booking |
+| POST | `/api/bookings` | user | Create a booking (not on your own listing) |
 | GET | `/api/bookings/me` | user | My trips |
 | GET | `/api/bookings/{id}` | guest or host | One booking |
-| POST | `/api/bookings/{id}/cancel` | guest | Cancel an upcoming booking |
+| POST | `/api/bookings/{id}/cancel` | guest | Cancel a booking before check-in day |
 | POST | `/api/bookings/{id}/review` | guest | Review a completed stay (overall and six category ratings, comment), once |
 | GET | `/api/host/listings` | user | Own listings with upcoming booking counts |
-| GET | `/api/host/reservations` | user | Bookings on own listings, `status=upcoming\|past\|cancelled` |
+| GET | `/api/host/reservations` | user | Bookings on own listings, `status=upcoming\|past\|cancelled`, optional `listing_id` |
 | GET | `/api/wishlists` | user | My wishlists with cover and count |
 | POST | `/api/wishlists` | user | Create a wishlist, optionally saving a listing |
 | GET | `/api/wishlists/saved` | user | Map of saved `listing_id` to `wishlist_id` (for hearts) |
@@ -252,102 +252,142 @@ All routes are under `/api`; interactive docs are at `<API>/docs`. Errors share 
 | DELETE | `/api/wishlists/{id}` | owner | Delete a wishlist |
 | POST | `/api/wishlists/{id}/items` | owner | Save a listing |
 | DELETE | `/api/wishlists/{id}/items/{listing_id}` | owner | Remove a listing |
-| GET | `/api/amenities` | - | All amenities grouped by category |
-| GET | `/api/destinations` | - | Matching cities with listing counts (`q`) |
+| GET | `/api/amenities` | - | All amenities |
+| GET | `/api/destinations` | - | Up to 8 matching cities with listing counts (`q`) |
 | GET | `/api/health` | - | `{"ok": true}` |
 
 Search parameters for `GET /api/listings`: `location`, `check_in` + `check_out` (both or neither; excludes listings with an overlapping confirmed booking), `guests`, `min_price`, `max_price`, `place_type`, `property_types`, `amenities` (comma-separated slugs, all required), `bedrooms`, `beds`, `bathrooms` (minimums), `instant_book`, `pets`, `page`.
 
+Photo uploads are not part of the API: the frontend's `POST /upload` (multipart field `file`) returns `{url}` with 201, or 401, 413, 415, 422, or 503 `uploads_unavailable` when no Blob token is configured.
+
 ## Local setup
 
-Prerequisites: Python 3.11 and Node.js 20+.
+Prerequisites: Docker, Python 3.12 and Node.js 22.
+
+### Database
+
+```bash
+docker run -d --name airbnb-clone-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=airbnb -p 5432:5432 postgres:17
+docker exec airbnb-clone-pg createdb -U postgres airbnb_test   # for the tests
+```
+
+This matches the backend's default `DATABASE_URL` (`postgresql+psycopg://postgres:postgres@localhost:5432/airbnb`). If port 5432 is taken, map any free port (e.g. `-p 55432:5432`) and set `DATABASE_URL` and `TEST_DATABASE_URL` to match.
 
 ### Backend
+
+macOS / Linux:
+
+```bash
+cd backend
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m app.seed
+python -m uvicorn app.main:app --reload --port 8000
+```
 
 Windows (PowerShell):
 
 ```powershell
 cd backend
-py -3.11 -m venv .venv
+py -3.12 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements-dev.txt
+python -m app.seed
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-macOS / Linux:
+`python -m app.seed` creates the btree_gist extension and the tables, then seeds an empty database: 10 users (6 hosts, 4 guests, including the two demo accounts), 78 listings in 13 cities (Goa, Jaipur, Udaipur, Manali, Rishikesh, Mumbai, Bengaluru, Kochi, Pondicherry, Coorg, Shimla, Dubai, Bali), 29 amenities, 825 bookings and 802 reviews. Past stays are reviewed except the demo guest's three latest, so writing a review can be tried; 20 future bookings block dates. The seed is deterministic (`random.Random(42)`) with dates relative to today. It does nothing if users already exist; `python -m app.seed --reset` drops every table and rebuilds.
 
-```bash
-cd backend
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-dev.txt
-python -m uvicorn app.main:app --reload --port 8000
-```
-
-On first start the app creates `app.db` and seeds it automatically when the users table is empty: 78 listings across 13 cities (Goa, Jaipur, Udaipur, Manali, Rishikesh, Mumbai, Bengaluru, Kochi, Pondicherry, Coorg, Shimla, Dubai, Bali), 6 hosts, 4 guests, 29 amenities, past bookings with reviews (the demo guest's three latest stays are left unreviewed, so a review can be written) and future bookings that block dates. The seed is deterministic (`random.Random(42)`). Rebuild it any time with `python -m app.seed --reset`.
+The API is at http://127.0.0.1:8000 (`/` redirects to `/docs`).
 
 ### Frontend
-
-macOS / Linux:
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local
+cp .env.example .env.local      # PowerShell: Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Windows (PowerShell): same, but copy with `Copy-Item .env.example .env.local`.
+`.env.example` sets `BACKEND_URL=http://127.0.0.1:8000` (also the fallback when unset). Open http://localhost:3000.
 
-`.env.example` sets `BACKEND_URL=http://127.0.0.1:8000` (the same value is used when it is unset or empty). Open http://localhost:3000.
+Photo uploads need `BLOB_READ_WRITE_TOKEN`. With access to the Vercel project, `vercel env pull` writes it into `.env.local` (keep `BACKEND_URL` pointing at the local API). Without it, `/upload` returns 503 `uploads_unavailable` and hosts can paste photo links instead.
 
-### Backend settings (environment variables)
+### Environment variables
+
+Backend (read from the process environment):
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DATABASE_URL` | `sqlite:///./app.db` | Database location |
-| `UPLOAD_DIR` | `./uploads` | Where uploaded photos are stored when the frontend has no Blob token (local development) |
+| `DATABASE_URL` | `postgresql+psycopg://postgres:postgres@localhost:5432/airbnb` | Postgres connection. `postgres://` and `postgresql://` URLs (as Neon issues them) are rewritten to use psycopg |
 | `JWT_SECRET` | dev value | Session signing key (set a real one in production) |
 | `COOKIE_SECURE` | `false` | Set `true` behind HTTPS |
-| `SQLITE_JOURNAL_MODE` | `WAL` | Use `DELETE` on network file shares |
+| `DEMO_PASSWORD` | dev value | Password the seed gives every seeded account (the demo buttons need none) |
+| `TEST_DATABASE_URL` | `postgresql+psycopg://postgres:postgres@localhost:5432/airbnb_test` | Tests only |
+
+Frontend:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `BACKEND_URL` | `http://127.0.0.1:8000` | Where `/api/*` is rewritten to, and where `/upload` checks the session |
+| `BLOB_READ_WRITE_TOKEN` | unset | Vercel Blob token for photo uploads |
 
 ## Tests
 
+Backend (needs the Postgres container):
+
 ```bash
 cd backend
-.venv/Scripts/python -m pytest        # Windows
-.venv/bin/python -m pytest            # macOS / Linux
+python -m pytest                # with the venv active
 ```
 
-95 tests cover pricing, search filters, auth, bookings, reviews, host tools and wishlists. The ones that matter most: double booking under concurrency, back-to-back stays, IST "today", price snapshot, hostile uploads and ownership checks.
+The suite recreates the schema in `TEST_DATABASE_URL` at the start and truncates every table after each test, so point it at a throwaway database. 88 tests cover pricing, search filters, auth, bookings, reviews, host tools and wishlists. The ones that matter most: two concurrent bookings for the same nights (the constraint lets exactly one through), back-to-back stays, IST "today", price snapshots and ownership checks.
 
-The frontend calendar rules and the upload type check have small check scripts: `cd frontend && npm run check:dates && npm run check:images` (needs Node 22.18+, which runs TypeScript files directly).
+Frontend:
+
+```bash
+cd frontend
+npx eslint .
+npx tsc --noEmit
+npm run check:dates     # calendar rules
+npm run check:images    # upload type sniffing
+npm run build
+```
+
+The check scripts import TypeScript directly, which needs Node 22.18 or newer. CI (`.github/workflows/ci.yml`) runs all of the above on every push to `main` and every pull request.
 
 ## Deployment
 
-- **Frontend:** Vercel project with root directory `frontend` and env var `BACKEND_URL` set to the API URL. A public Vercel Blob store is connected to the project, which provides `BLOB_READ_WRITE_TOKEN` for photo uploads. It auto-deploys from `main`.
-- **Backend:** Azure App Service (Linux, Python 3.11, Central India). The SQLite file (and uploads from before Vercel Blob) live on the persistent `/home` share (`DATABASE_URL=sqlite:////home/data/app.db`, `UPLOAD_DIR=/home/data/uploads`). WAL needs shared memory, which a network share cannot provide, so production sets `SQLITE_JOURNAL_MODE=DELETE`.
-- **How the code gets there:** basic-auth publishing is disabled by subscription policy, so Local Git and FTP are unavailable. Instead, the `deploy-backend` branch is `git subtree split --prefix backend` of `main`; it is downloaded into `/home/site/wwwroot` over the App Service browser SSH, with a venv at `/home/site/antenv`. Startup command: `/home/site/antenv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --app-dir /home/site/wwwroot`.
+- **Two Vercel projects from one repo.** `airbnb-clone` has root directory `frontend` (Next.js). `airbnb-clone-api` has root directory `backend`; Vercel detects the FastAPI `app` in `app/main.py` and runs it as a Python 3.12 function (`backend/.python-version`). Both deploy from `main`.
+- **Region.** Functions run in Singapore (`sin1`), next to the database.
+- **Database.** Neon Postgres (free plan, `ap-southeast-1` Singapore), provisioned through the Vercel Marketplace, which injects `DATABASE_URL` into the API project. The schema and demo data are created once with `python -m app.seed` run against that URL.
+- **Photos.** A public Vercel Blob store connected to the frontend project provides `BLOB_READ_WRITE_TOKEN`.
+- **Environment.** Frontend: `BACKEND_URL` (the API project's URL). API: `DATABASE_URL`, `JWT_SECRET`, `COOKIE_SECURE=true`.
+- **Build skipping.** Each project's Ignored Build Step is `git diff --quiet HEAD^ HEAD -- .`, so a push only rebuilds the project whose folder changed.
 
-## Assumptions
+## Assumptions and limits
 
 - Payments are mocked: the card form is validated but never sent anywhere. Service fee (14%) and taxes (5%) are mock rates, and prices are in INR.
-- Messaging, Experiences, Services and profile pages are out of scope and show "Coming soon". Identity verification is left out entirely, and the flexible dates tab is disabled.
-- A host is a Superhost when the average rating across their live listings is at least 4.8 and those listings have at least 10 completed stays (confirmed, checked out by today). It is computed on each request, like ratings.
+- Messaging, Experiences, Services and profile pages are out of scope and show "Coming soon". Identity verification is left out, and the flexible dates tab is disabled.
+- A host is a Superhost when the average rating across their live listings is at least 4.8 and those listings have at least 10 completed stays (confirmed, checked out by today).
 - A user becomes a host by creating a listing; there is no separate host sign-up.
-- A booking is confirmed immediately (no host approval step), and only upcoming stays can be cancelled.
-- Seeded listing photos are Unsplash URLs; hosts can also paste any https link. Uploaded photos go to Vercel Blob in production and to the backend's disk locally. Vercel functions accept request bodies up to about 4.5 MB, so uploads are capped at 4 MB (the backend alone would accept 5 MB). The map uses OpenStreetMap tiles.
+- A booking is confirmed immediately (no host approval step), and only stays that have not started can be cancelled.
+- Seeded listing photos are Unsplash URLs; hosts can also paste any https link. Vercel functions accept request bodies up to about 4.5 MB, so uploads are capped at 4 MB. The map uses OpenStreetMap tiles.
 - "Today" is computed in Asia/Kolkata for date validation.
+- No migrations: `python -m app.seed` only creates missing tables, so a change to an existing table needs `--reset` (which deletes all data).
 - Seed data is fictional and deterministic.
 
 ## Project structure
 
 ```
+.github/workflows/ci.yml   backend tests on Postgres, frontend checks and build
 backend/
-  app/            FastAPI app: routers/, models.py, pricing.py, availability.py, seed.py
+  app/            FastAPI app: main.py, routers/, models.py, pricing.py, availability.py, seed.py
   tests/          pytest suite
 frontend/
   src/app/        Next.js routes (search, rooms, book, trips, wishlists, hosting, become-a-host)
+                  and upload/route.ts (photo uploads to Vercel Blob)
   src/components/ UI components
   src/hooks/      data hooks (TanStack Query)
   src/lib/        API client and helpers
