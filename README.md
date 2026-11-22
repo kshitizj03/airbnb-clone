@@ -2,7 +2,7 @@
 
 An Airbnb-style stays marketplace: search with dates and filters, listing pages with a calendar and a live price quote, bookings with double-booking protection, wishlists, and a host dashboard with a listing editor. Next.js frontend, FastAPI backend, SQLite database.
 
-The UI look and copy mirror Airbnb on purpose, because the assignment grades similarity; no Airbnb assets (logo files, images) are copied.
+A personal project: a full-stack clone of Airbnb built from scratch. The UI look and copy mirror Airbnb on purpose; no Airbnb assets (logo files, images) are copied, and the project is not affiliated with Airbnb.
 
 ## Live demo
 
@@ -24,9 +24,9 @@ Try it:
 7. Log in as the demo host, click **Switch to hosting**, open **Listings** and create a listing with the **+** button (upload a photo or paste a link); it appears in search.
 8. Open the user menu (top right) and switch the theme to **Dark**.
 
-### Bonus features from the brief
+### Highlights
 
-| Bonus | Status |
+| Feature | How |
 |---|---|
 | Interactive map with listing pins | Done: search results map with price pins, plus a location map on each listing |
 | Leave a review after a completed stay | Done: `POST /api/bookings/{id}/review`, one review per stay, after checkout |

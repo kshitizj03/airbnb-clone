@@ -11,7 +11,7 @@ const cereal = Plus_Jakarta_Sans({ variable: "--font-cereal", subsets: ["latin"]
 
 export const metadata: Metadata = {
   title: "Airbnb clone",
-  description: "A take-home clone of Airbnb: search, book and host stays.",
+  description: "A full-stack Airbnb clone: search, book and host stays.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
